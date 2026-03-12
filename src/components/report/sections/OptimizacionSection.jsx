@@ -1,6 +1,7 @@
 import SectionTitle from '@/components/report/SectionTitle';
 import { Edit3 } from 'lucide-react';
 
+
 const OPTIMIZACION = {
   '2.0TD': {
     title: 'Optimización Tarifaria — 2.0TD',

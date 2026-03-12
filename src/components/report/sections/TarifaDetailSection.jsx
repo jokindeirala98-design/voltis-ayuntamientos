@@ -1,6 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import SectionTitle from '@/components/report/SectionTitle';
-import { sumPeriods, fmtNum, fmtPct, PERIOD_COLORS, PERIOD_NAMES, getPeriodsForLabel, buildChartData } from '@/lib/reportUtils';
+import { sumPeriods, fmtNum, fmtPct, PERIOD_COLORS, PERIOD_NAMES, getPeriodsForLabel, buildChartData } from '@/components/report/reportUtils';
 
 const RADIAN = Math.PI / 180;
 function CustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {

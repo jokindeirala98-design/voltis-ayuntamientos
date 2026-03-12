@@ -1,6 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import SectionTitle from '@/components/report/SectionTitle';
-import { fmtNum, fmtPct, GAS_COLORS } from '@/lib/reportUtils';
+import { fmtNum, fmtPct, GAS_COLORS } from '@/components/report/reportUtils';
 
 const RADIAN = Math.PI / 180;
 function CustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {

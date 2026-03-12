@@ -1,5 +1,5 @@
 import SectionTitle from '@/components/report/SectionTitle';
-import { fmtNum } from '@/lib/reportUtils';
+import { fmtNum } from '@/components/report/reportUtils';
 
 function KPICard({ label, value, unit, highlight }) {
   return (

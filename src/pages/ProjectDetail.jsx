@@ -6,6 +6,7 @@ import FileUploadZone from '@/components/project/FileUploadZone';
 import SupplyTable from '@/components/project/SupplyTable';
 import FileDetailModal from '@/components/project/FileDetailModal';
 import ExportExcelButton from '@/components/project/ExportExcelButton';
+import GenerateReportButton from '@/components/report/GenerateReportButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {

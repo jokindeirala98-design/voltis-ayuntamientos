@@ -45,6 +45,15 @@ export default function ProjectDetail() {
     refetchInterval: 5000
   });
 
+  const { data: existingReport } = useQuery({
+    queryKey: ['report-latest', id],
+    queryFn: async () => {
+      const reports = await base44.entities.ReportDocuments.filter({ project_id: id }, '-created_date', 1);
+      return reports[0] || null;
+    },
+    enabled: !!id
+  });
+
   const updateProjectMutation = useMutation({
     mutationFn: (data) => base44.entities.Projects.update(id, data)
   });

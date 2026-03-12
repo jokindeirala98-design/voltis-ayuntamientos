@@ -10,11 +10,8 @@ import GenerateReportButton from '@/components/report/GenerateReportButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle
-} from '@/components/ui/dialog';
-import {
   ArrowLeft, Zap, FileText, CheckCircle2, AlertCircle,
-  AlertTriangle, FileBarChart2, RefreshCw, ChevronDown, ChevronUp
+  AlertTriangle, RefreshCw, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -230,46 +227,7 @@ export default function ProjectDetail() {
         onClose={() => setDetailRow(null)}
       />
 
-      {/* Generate report modal */}
-      <Dialog open={showReport} onOpenChange={setShowReport}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileBarChart2 className="w-4 h-4 text-slate-400" />
-              Generar informe
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
-              <p className="text-sm font-medium text-blue-800 mb-1">Funcionalidad preparada para la siguiente fase</p>
-              <p className="text-xs text-blue-600">
-                En esta primera versión la tabla de suministros es exportable a Excel. En la siguiente fase
-                se generarán informes completos en Word con gráficos, tablas resumen por tipo de suministro,
-                análisis de consumos y recomendaciones de optimización.
-              </p>
-            </div>
-            <div className="space-y-2 text-xs text-slate-500">
-              <p className="font-medium text-slate-700 mb-2">Disponible en próxima versión:</p>
-              {[
-                'Informe Word con portada y tabla de suministros',
-                'Gráficos de consumo por tipo y periodo',
-                'Comparativa de tarifas y potencias',
-                'Resumen ejecutivo por ayuntamiento',
-                'Detección de anomalías y oportunidades de ahorro'
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span className="text-blue-300 mt-0.5">○</span>
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
-            <ExportExcelButton rows={rows} projectName={project?.name} />
-            <Button variant="outline" size="sm" onClick={() => setShowReport(false)}>Cerrar</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }

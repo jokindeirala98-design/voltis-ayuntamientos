@@ -23,7 +23,6 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [detailRow, setDetailRow] = useState(null);
-  const [showReport, setShowReport] = useState(false);
   const [showUpload, setShowUpload] = useState(true);
 
   const { data: project } = useQuery({
@@ -98,15 +97,7 @@ export default function ProjectDetail() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <ExportExcelButton rows={rows} projectName={project?.name} />
-            <Button
-              onClick={() => setShowReport(true)}
-              size="sm"
-              variant="outline"
-              className="gap-2 text-slate-600"
-            >
-              <FileBarChart2 className="w-4 h-4" />
-              Generar informe
-            </Button>
+            <GenerateReportButton rows={rows} project={project} existingReport={existingReport} />
           </div>
         </div>
       </div>

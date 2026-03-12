@@ -78,19 +78,46 @@ export default function FileUploadZone({ projectId, onProcessingComplete }) {
         });
         updateQueueItem(item.id, { progress: 60, db_id: dbFile.id });
 
-        // Process with LLM
-        const result = await base44.functions.invoke('processInvoice', {
+        // Fire-and-forget: launch processInvoice without waiting (it can take 30-60s)
+        base44.functions.invoke('processInvoice', {
           file_url,
           filename: item.name,
           project_id: projectId,
           file_id: dbFile.id
-        });
+        }).catch(() => {}); // ignore network timeout — backend keeps running
 
-        if (result?.data?.success) {
-          updateQueueItem(item.id, { status: 'completado', progress: 100 });
-        } else {
-          throw new Error(result?.data?.error || 'Error desconocido');
-        }
+        updateQueueItem(item.id, { status: 'procesando', progress: 70 });
+
+        // Poll file status until completado or error (max 3 min)
+        let pollCount = 0;
+        const maxPolls = 36; // 36 x 5s = 3 min
+        await new Promise((resolve) => {
+          const interval = setInterval(async () => {
+            pollCount++;
+            const files = await base44.entities.UploadedFiles.filter({ id: dbFile.id });
+            const fileStatus = files?.[0]?.processing_status;
+            const progress = Math.min(70 + pollCount * 2, 95);
+            updateQueueItem(item.id, { progress });
+
+            if (fileStatus === 'completado') {
+              clearInterval(interval);
+              updateQueueItem(item.id, { status: 'completado', progress: 100 });
+              resolve();
+            } else if (fileStatus === 'error') {
+              clearInterval(interval);
+              updateQueueItem(item.id, {
+                status: 'error',
+                progress: 0,
+                error: files?.[0]?.error_message || 'Error de procesamiento'
+              });
+              resolve();
+            } else if (pollCount >= maxPolls) {
+              clearInterval(interval);
+              updateQueueItem(item.id, { status: 'error', progress: 0, error: 'Tiempo de espera agotado' });
+              resolve();
+            }
+          }, 5000);
+        });
       } catch (err) {
         updateQueueItem(item.id, {
           status: 'error',

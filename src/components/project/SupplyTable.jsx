@@ -1,0 +1,315 @@
+import { useState, useCallback, useRef } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { AlertCircle, CheckCircle2, AlertTriangle, Trash2, Plus, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const COLUMNS = [
+  { key: 'comercializadora', label: 'Comercializadora', width: 160, critical: true },
+  { key: 'cups', label: 'CUPS', width: 200, critical: true },
+  { key: 'tarifa', label: 'Tarifa', width: 90, critical: true },
+  { key: 'direccion_suministro', label: 'Dirección suministro', width: 200, critical: true },
+  { key: 'tipo_suministro', label: 'Tipo', width: 90, critical: true },
+  { key: 'potencia_p1', label: 'Pot. P1', width: 80, type: 'number' },
+  { key: 'potencia_p2', label: 'Pot. P2', width: 80, type: 'number' },
+  { key: 'potencia_p3', label: 'Pot. P3', width: 80, type: 'number' },
+  { key: 'potencia_p4', label: 'Pot. P4', width: 80, type: 'number' },
+  { key: 'potencia_p5', label: 'Pot. P5', width: 80, type: 'number' },
+  { key: 'potencia_p6', label: 'Pot. P6', width: 80, type: 'number' },
+  { key: 'consumo_p1', label: 'Cons. P1', width: 90, type: 'number', manual: true },
+  { key: 'consumo_p2', label: 'Cons. P2', width: 90, type: 'number', manual: true },
+  { key: 'consumo_p3', label: 'Cons. P3', width: 90, type: 'number', manual: true },
+  { key: 'consumo_p4', label: 'Cons. P4', width: 90, type: 'number', manual: true },
+  { key: 'consumo_p5', label: 'Cons. P5', width: 90, type: 'number', manual: true },
+  { key: 'consumo_p6', label: 'Cons. P6', width: 90, type: 'number', manual: true },
+  { key: 'consumo_total', label: 'Cons. Total', width: 90, type: 'number', manual: true },
+  { key: 'archivo_origen', label: 'Archivo origen', width: 160 },
+  { key: 'validation_status', label: 'Estado', width: 100 },
+  { key: 'observations', label: 'Observaciones', width: 240 },
+];
+
+const validationConfig = {
+  OK: { icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', label: 'OK' },
+  Revisar: { icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50', label: 'Revisar' },
+  Incompleto: { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', label: 'Incompleto' }
+};
+
+function getCellBg(row, colKey, confidence) {
+  const criticalCols = ['comercializadora', 'cups', 'tarifa', 'direccion_suministro', 'tipo_suministro'];
+  if (!criticalCols.includes(colKey)) return '';
+  const val = row[colKey];
+  if (!val || val === '') return 'bg-red-50';
+  if (confidence === 'baja') return 'bg-red-50';
+  if (confidence === 'media') return 'bg-amber-50';
+  return '';
+}
+
+function EditableCell({ value, onChange, type = 'text', className = '' }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef(null);
+
+  const start = () => {
+    setDraft(value ?? '');
+    setEditing(true);
+    setTimeout(() => inputRef.current?.select(), 10);
+  };
+
+  const commit = () => {
+    setEditing(false);
+    const parsed = type === 'number' && draft !== '' ? parseFloat(draft) : draft;
+    if (parsed !== value) onChange(type === 'number' && draft === '' ? null : parsed);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type={type === 'number' ? 'number' : 'text'}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => {
+          if (e.key === 'Enter') { commit(); }
+          if (e.key === 'Escape') { setEditing(false); }
+        }}
+        className={`w-full h-full px-1.5 py-0.5 text-xs border border-blue-400 outline-none rounded focus:ring-1 ring-blue-300 ${className}`}
+      />
+    );
+  }
+
+  return (
+    <div
+      onDoubleClick={start}
+      onClick={start}
+      className={`w-full h-full px-1.5 py-0.5 cursor-pointer text-xs truncate ${className}`}
+      title={String(value ?? '')}
+    >
+      {value !== null && value !== undefined && value !== '' ? String(value) : (
+        <span className="text-slate-300">—</span>
+      )}
+    </div>
+  );
+}
+
+export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded, onRowUpdated, onViewDetail }) {
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState('asc');
+  const [filter, setFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const queryClient = useQueryClient();
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.SupplyRows.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supply-rows', projectId] });
+      if (onRowUpdated) onRowUpdated();
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.SupplyRows.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supply-rows', projectId] });
+      if (onRowDeleted) onRowDeleted();
+    }
+  });
+
+  const addMutation = useMutation({
+    mutationFn: () => base44.entities.SupplyRows.create({
+      project_id: projectId,
+      validation_status: 'Incompleto',
+      observations: 'Fila añadida manualmente'
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supply-rows', projectId] });
+      if (onRowAdded) onRowAdded();
+    }
+  });
+
+  const handleCellChange = useCallback((row, key, value) => {
+    const newData = { [key]: value };
+
+    // Auto-recalculate consumo_total if consumo_px changes
+    if (key.startsWith('consumo_p')) {
+      const updatedRow = { ...row, [key]: value };
+      const total = ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6']
+        .reduce((sum, k) => sum + (parseFloat(updatedRow[k]) || 0), 0);
+      if (total > 0) newData.consumo_total = Math.round(total * 1000) / 1000;
+    }
+
+    // Revalidate status when critical fields change
+    const criticals = ['comercializadora', 'cups', 'tarifa', 'direccion_suministro', 'tipo_suministro'];
+    if (criticals.includes(key)) {
+      const updatedRow = { ...row, [key]: value };
+      const hasEmpty = criticals.some(k => !updatedRow[k] || updatedRow[k] === '');
+      if (!hasEmpty && row.validation_status === 'Incompleto') {
+        newData.validation_status = 'Revisar';
+      }
+    }
+
+    updateMutation.mutate({ id: row.id, data: newData });
+  }, [updateMutation]);
+
+  const handleSort = (key) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+  };
+
+  // Filter & sort
+  let filtered = rows;
+  if (filter) {
+    const q = filter.toLowerCase();
+    filtered = filtered.filter(r =>
+      (r.cups || '').toLowerCase().includes(q) ||
+      (r.direccion_suministro || '').toLowerCase().includes(q) ||
+      (r.comercializadora || '').toLowerCase().includes(q) ||
+      (r.archivo_origen || '').toLowerCase().includes(q)
+    );
+  }
+  if (statusFilter !== 'all') {
+    filtered = filtered.filter(r => r.validation_status === statusFilter);
+  }
+  if (sortKey) {
+    filtered = [...filtered].sort((a, b) => {
+      const av = a[sortKey] ?? '';
+      const bv = b[sortKey] ?? '';
+      return sortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+    });
+  }
+
+  const SortIcon = ({ k }) => {
+    if (sortKey !== k) return <ChevronsUpDown className="w-3 h-3 opacity-30" />;
+    return sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />;
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
+        <input
+          type="text"
+          placeholder="Buscar por CUPS, dirección, comercializadora…"
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          className="text-xs border border-slate-200 rounded px-3 py-1.5 w-72 outline-none focus:border-blue-400"
+        />
+        <select
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)}
+          className="text-xs border border-slate-200 rounded px-2 py-1.5 outline-none focus:border-blue-400 bg-white"
+        >
+          <option value="all">Todos los estados</option>
+          <option value="OK">OK</option>
+          <option value="Revisar">Revisar</option>
+          <option value="Incompleto">Incompleto</option>
+        </select>
+        <span className="text-xs text-slate-400 ml-auto">{filtered.length} filas</span>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => addMutation.mutate()}
+          disabled={addMutation.isPending}
+          className="gap-1.5 text-xs"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Añadir fila
+        </Button>
+      </div>
+
+      {/* Table */}
+      <div className="flex-1 overflow-auto border border-slate-200 rounded-lg">
+        <table className="text-xs border-collapse" style={{ minWidth: COLUMNS.reduce((s, c) => s + c.width, 50) }}>
+          <thead>
+            <tr className="bg-slate-50 sticky top-0 z-10">
+              <th className="w-10 border-b border-r border-slate-200 px-2 text-slate-400 font-normal">#</th>
+              {COLUMNS.map(col => (
+                <th
+                  key={col.key}
+                  className="border-b border-r border-slate-200 px-1.5 py-2 text-left font-medium text-slate-600 cursor-pointer hover:bg-slate-100 select-none"
+                  style={{ width: col.width, minWidth: col.width }}
+                  onClick={() => handleSort(col.key)}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className="truncate">{col.label}</span>
+                    {col.manual && <span className="text-blue-300" title="Edición manual">✏</span>}
+                    <SortIcon k={col.key} />
+                  </div>
+                </th>
+              ))}
+              <th className="w-12 border-b border-slate-200 px-2 text-slate-400 font-normal">Acc.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={COLUMNS.length + 2} className="py-12 text-center text-slate-400">
+                  {rows.length === 0 ? 'Sube facturas para ver los suministros extraídos' : 'No hay resultados para ese filtro'}
+                </td>
+              </tr>
+            )}
+            {filtered.map((row, idx) => {
+              const conf = row.confidence_json ? JSON.parse(row.confidence_json) : {};
+              const vc = validationConfig[row.validation_status] || validationConfig.Incompleto;
+              const VIcon = vc.icon;
+              return (
+                <tr
+                  key={row.id}
+                  className="group border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
+                >
+                  <td className="border-r border-slate-100 px-2 text-slate-400 text-center">{idx + 1}</td>
+                  {COLUMNS.map(col => {
+                    if (col.key === 'validation_status') {
+                      return (
+                        <td key={col.key} className={`border-r border-slate-100 ${vc.bg}`} style={{ width: col.width }}>
+                          <div className={`flex items-center gap-1 px-2 py-1 ${vc.color}`}>
+                            <VIcon className="w-3 h-3 shrink-0" />
+                            <span className="truncate font-medium">{row.validation_status}</span>
+                          </div>
+                        </td>
+                      );
+                    }
+
+                    const cellBg = getCellBg(row, col.key, conf[col.key]);
+
+                    return (
+                      <td
+                        key={col.key}
+                        className={`border-r border-slate-100 ${cellBg} p-0`}
+                        style={{ width: col.width, height: 30 }}
+                      >
+                        <EditableCell
+                          value={row[col.key]}
+                          type={col.type || 'text'}
+                          onChange={val => handleCellChange(row, col.key, val)}
+                        />
+                      </td>
+                    );
+                  })}
+                  <td className="px-1 text-center">
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => onViewDetail && onViewDetail(row)}
+                        className="p-0.5 text-slate-400 hover:text-slate-600"
+                        title="Ver detalle"
+                      >
+                        <AlertCircle className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => deleteMutation.mutate(row.id)}
+                        className="p-0.5 text-slate-300 hover:text-red-500"
+                        title="Eliminar fila"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

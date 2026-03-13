@@ -331,7 +331,7 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto border border-slate-200 rounded-lg">
+      <div ref={tableRef} className="flex-1 overflow-auto border border-slate-200 rounded-lg">
         <table className="text-xs border-collapse" style={{ minWidth: COLUMNS.reduce((s, c) => s + c.width, 90) }}>
           <thead>
             <tr className="bg-slate-50 sticky top-0 z-10">

@@ -3,7 +3,7 @@ import { fmtNum } from '@/components/report/reportUtils';
 
 function KPICard({ label, value, unit, highlight }) {
   return (
-    <div className={`rounded-xl border p-5 text-center ${highlight ? 'bg-blue-900 border-blue-800' : 'bg-white border-slate-200'}`}>
+    <div className={`rounded-xl border p-5 text-center ${highlight ? 'bg-blue-900 border-blue-800' : 'bg-white border-slate-200'}`} style={highlight ? { backgroundColor: '#1e3a8a', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } : {}}>
       <div className={`text-2xl font-bold mb-0.5 ${highlight ? 'text-white' : 'text-slate-900'}`}>{value}</div>
       {unit && <div className={`text-xs mb-1 ${highlight ? 'text-blue-200' : 'text-slate-400'}`}>{unit}</div>}
       <div className={`text-xs ${highlight ? 'text-blue-300' : 'text-slate-500'}`}>{label}</div>

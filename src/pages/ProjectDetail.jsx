@@ -7,7 +7,6 @@ import SupplyTable from '@/components/project/SupplyTable';
 import FileDetailModal from '@/components/project/FileDetailModal';
 import ExportExcelButton from '@/components/project/ExportExcelButton';
 import GenerateReportButton from '@/components/report/GenerateReportButton';
-import QuickConsumoModal from '@/components/project/QuickConsumoModal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -52,7 +51,6 @@ export default function ProjectDetail() {
     enabled: !!id
   });
 
-  const [showQuickConsumo, setShowQuickConsumo] = useState(false);
   const [confirmDeleteFileId, setConfirmDeleteFileId] = useState(null);
   const [deleteFileMsg, setDeleteFileMsg] = useState('');
 
@@ -264,16 +262,6 @@ export default function ProjectDetail() {
                 Tabla de suministros
                 <span className="text-xs text-slate-400 ml-2 font-normal">Haz clic en cualquier celda para editar</span>
               </span>
-              {rows.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowQuickConsumo(true)}
-                  className="gap-1.5 text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
-                >
-                  ⚡ Consumos
-                </Button>
-              )}
             </div>
             <div className="flex items-center gap-3 text-xs text-slate-400">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-red-200 inline-block" /> Campo requerido vacío o baja confianza</span>
@@ -293,15 +281,6 @@ export default function ProjectDetail() {
           </div>
         </div>
       </div>
-
-      {showQuickConsumo && (
-        <QuickConsumoModal
-          rows={rows}
-          projectId={id}
-          onClose={() => setShowQuickConsumo(false)}
-          onUpdated={refetchRows}
-        />
-      )}
 
       {/* File detail modal */}
       <FileDetailModal

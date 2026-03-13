@@ -345,6 +345,7 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
             <Plus className="w-3.5 h-3.5" />
             Añadir fila
           </Button>
+          <ImportConsumosButton rows={rows} onUpdated={onRowUpdated} />
         </div>
       </div>
 

@@ -16,7 +16,7 @@ import LecturaRapidaSection from '@/components/report/sections/LecturaRapidaSect
 import OptimizacionSection from '@/components/report/sections/OptimizacionSection';
 import PrecioIndexadoSection from '@/components/report/sections/PrecioIndexadoSection';
 import {
-  ArrowLeft, Edit3, Save, RefreshCw, Download, FileText, Loader2, CheckCircle2
+  ArrowLeft, Edit3, Save, FileText, Loader2, CheckCircle2, AlertOctagon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -73,7 +73,7 @@ export default function ReportView() {
     enabled: !!reportId
   });
 
-  const rows = report?.rows_snapshot ? JSON.parse(report.rows_snapshot) : [];
+  const rows = report?.rows_snapshot ? (() => { try { return JSON.parse(report.rows_snapshot); } catch { return []; } })() : [];
   const classified = classifyRows(rows);
   const generatedAt = report?.created_date ? new Date(report.created_date) : new Date();
 
@@ -131,6 +131,13 @@ export default function ReportView() {
           <div className="hidden sm:block w-px h-5 bg-slate-200" />
           <span className="text-sm font-semibold text-slate-800 flex-1 min-w-0 truncate">{report.title || 'Informe energético'}</span>
 
+          {report.status === 'borrador' && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+              <AlertOctagon className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="text-xs text-amber-800 font-medium">Informe desactualizado — los datos del proyecto han cambiado.</span>
+              <Link to={`/project/${id}`} className="text-xs text-amber-700 underline font-medium whitespace-nowrap">Regenerar informe</Link>
+            </div>
+          )}
           <div className="flex items-center gap-2 ml-auto flex-wrap">
             {saved && (
               <span className="flex items-center gap-1 text-xs text-green-600 font-medium">

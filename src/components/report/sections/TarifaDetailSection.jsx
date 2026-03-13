@@ -38,7 +38,7 @@ export default function TarifaDetailSection({ tarifaLabel, rows, sectionNum }) {
       <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm mb-8" style={{ breakInside: 'avoid' }}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-blue-900 text-white">
+            <tr style={{ backgroundColor: '#1e3a8a', color: 'white', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
               <th className="text-left px-5 py-3">Periodo</th>
               <th className="text-right px-5 py-3">Consumo (kWh)</th>
               <th className="text-right p-0 font-semibold" style={{ minWidth: 130 }}>

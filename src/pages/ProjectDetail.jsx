@@ -13,7 +13,6 @@ import {
   ArrowLeft, Zap, FileText, CheckCircle2, AlertCircle,
   AlertTriangle, RefreshCw, ChevronDown, ChevronUp, Trash2, AlertOctagon
 } from 'lucide-react';
-import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 

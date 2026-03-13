@@ -1,10 +1,9 @@
 import SectionTitle from '@/components/report/SectionTitle';
-import { fmtNum, fmtPct } from '@/components/report/reportUtils';
+import { fmtNum, fmtPct, pctBadgeClass } from '@/components/report/reportUtils';
 
 export default function TarifaTableSection({ rows, sectionNum }) {
   const total = rows.reduce((s, r) => s + (Number(r.consumo_total) || 0), 0);
 
-  // Group by tarifa
   const groups = {};
   rows.forEach(r => {
     const t = r.tarifa?.trim() || 'Sin tarifa';
@@ -37,7 +36,9 @@ export default function TarifaTableSection({ rows, sectionNum }) {
                   <td className="px-5 py-3 font-bold text-blue-900">{tarifa}</td>
                   <td className="px-5 py-3 text-right text-slate-700">{grpRows.length}</td>
                   <td className="px-5 py-3 text-right font-mono text-slate-800">{fmtNum(grpTotal)}</td>
-                  <td className="px-5 py-3 text-right text-slate-600">{fmtPct(grpTotal, total)}</td>
+                  <td className="px-5 py-3 text-right">
+                    <span className={pctBadgeClass(grpTotal, total)}>{fmtPct(grpTotal, total)}</span>
+                  </td>
                   <td className="px-5 py-3 text-right text-slate-600">{fmtNum(grpTotal / grpRows.length)}</td>
                 </tr>
               );

@@ -1,16 +1,16 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import SectionTitle from '@/components/report/SectionTitle';
-import { fmtNum, fmtPct, GAS_COLORS } from '@/components/report/reportUtils';
+import { fmtNum, fmtPct, pctBadgeClass, GAS_COLORS } from '@/components/report/reportUtils';
 
 const RADIAN = Math.PI / 180;
-function CustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
+function CustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) {
   if (percent < 0.04) return null;
   const r = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + r * Math.cos(-midAngle * RADIAN);
   const y = cy + r * Math.sin(-midAngle * RADIAN);
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight="600">
-      {`${(percent * 100).toFixed(0)}%`}
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight="700">
+      {name}{'\n'}{`${(percent * 100).toFixed(0)}%`}
     </text>
   );
 }
@@ -47,11 +47,31 @@ export default function GasSection({ rows, sectionNum }) {
           <p className="text-sm font-medium text-slate-600 mb-3 text-center">Distribución por tarifa RL</p>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" outerRadius={105} dataKey="value" labelLine={false} label={CustomLabel}>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                outerRadius={105}
+                dataKey="value"
+                labelLine={false}
+                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+                  if (percent < 0.04) return null;
+                  const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+                  const x = cx + r * Math.cos(-midAngle * RADIAN);
+                  const y = cy + r * Math.sin(-midAngle * RADIAN);
+                  return (
+                    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight="700">
+                      {`${name} ${(percent * 100).toFixed(0)}%`}
+                    </text>
+                  );
+                }}
+                strokeWidth={2}
+                stroke="#fff"
+              >
                 {pieData.map((_, i) => <Cell key={i} fill={GAS_COLORS[i % GAS_COLORS.length]} />)}
               </Pie>
-              <Tooltip formatter={(v) => [`${fmtNum(v)} kWh`, '']} />
-              <Legend iconSize={12} />
+              <Tooltip formatter={(v, name) => [`${fmtNum(v)} kWh`, name]} />
+              <Legend iconSize={12} iconType="square" />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -73,10 +93,12 @@ export default function GasSection({ rows, sectionNum }) {
                 const grpTotal = grp.reduce((s, r) => s + (Number(r.consumo_total) || 0), 0);
                 return (
                   <tr key={rl} className={i % 2 === 0 ? 'bg-white' : 'bg-orange-50/30'}>
-                    <td className="px-5 py-2.5 font-bold text-orange-800">{rl}</td>
+                    <td className="px-5 py-2.5 font-bold" style={{ color: GAS_COLORS[i % GAS_COLORS.length] }}>{rl}</td>
                     <td className="px-5 py-2.5 text-right">{grp.length}</td>
                     <td className="px-5 py-2.5 text-right font-mono">{fmtNum(grpTotal)}</td>
-                    <td className="px-5 py-2.5 text-right text-slate-600">{fmtPct(grpTotal, totalGas)}</td>
+                    <td className="px-5 py-2.5 text-right">
+                      <span className={pctBadgeClass(grpTotal, totalGas)}>{fmtPct(grpTotal, totalGas)}</span>
+                    </td>
                   </tr>
                 );
               })}

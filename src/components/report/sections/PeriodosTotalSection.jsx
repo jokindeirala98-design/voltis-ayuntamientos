@@ -1,19 +1,8 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import SectionTitle from '@/components/report/SectionTitle';
-import { sumPeriods, fmtNum, fmtPct, PERIOD_COLORS, PERIOD_NAMES, buildChartData } from '@/components/report/reportUtils';
+import { sumPeriods, fmtNum, fmtPct, pctBadgeClass, PERIOD_COLORS, PERIOD_NAMES, buildChartData } from '@/components/report/reportUtils';
 
 const RADIAN = Math.PI / 180;
-function CustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
-  if (percent < 0.04) return null;
-  const r = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + r * Math.cos(-midAngle * RADIAN);
-  const y = cy + r * Math.sin(-midAngle * RADIAN);
-  return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight="600">
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
-  );
-}
 
 export default function PeriodosTotalSection({ classified, sectionNum }) {
   const { electric, td61 } = classified;
@@ -52,13 +41,15 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
                   <tr key={p} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                     <td className="px-5 py-2.5">
                       <span className="inline-flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: PERIOD_COLORS[i] }} />
+                        <span className="w-3 h-3 rounded shrink-0" style={{ backgroundColor: PERIOD_COLORS[i] }} />
                         <span className="font-semibold">{p}</span>
                         <span className="text-slate-400 text-xs">· {PERIOD_NAMES[p]}</span>
                       </span>
                     </td>
                     <td className="px-5 py-2.5 text-right font-mono">{fmtNum(val)}</td>
-                    <td className="px-5 py-2.5 text-right text-slate-600">{fmtPct(val, periodTotal)}</td>
+                    <td className="px-5 py-2.5 text-right">
+                      <span className={pctBadgeClass(val, periodTotal)}>{fmtPct(val, periodTotal)}</span>
+                    </td>
                   </tr>
                 );
               })}
@@ -77,11 +68,38 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
           <p className="text-sm font-medium text-slate-600 mb-3 text-center">Distribución por periodos</p>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" outerRadius={105} dataKey="value" labelLine={false} label={CustomLabel}>
-                {pieData.map((_, i) => <Cell key={i} fill={PERIOD_COLORS[i % PERIOD_COLORS.length]} />)}
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                outerRadius={105}
+                dataKey="value"
+                labelLine={false}
+                strokeWidth={2}
+                stroke="#fff"
+                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+                  if (percent < 0.04) return null;
+                  const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+                  const x = cx + r * Math.cos(-midAngle * RADIAN);
+                  const y = cy + r * Math.sin(-midAngle * RADIAN);
+                  return (
+                    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight="700">
+                      {`${name} ${(percent * 100).toFixed(0)}%`}
+                    </text>
+                  );
+                }}
+              >
+                {pieData.map((entry, i) => {
+                  const idx = periods.indexOf(entry.name);
+                  return <Cell key={i} fill={PERIOD_COLORS[idx >= 0 ? idx : i]} />;
+                })}
               </Pie>
-              <Tooltip formatter={(v) => [`${fmtNum(v)} kWh`, '']} />
-              <Legend formatter={(name) => `${name} — ${PERIOD_NAMES[name] || ''}`} iconSize={12} />
+              <Tooltip formatter={(v, name) => [`${fmtNum(v)} kWh`, `${name} — ${PERIOD_NAMES[name] || ''}`]} />
+              <Legend
+                iconSize={12}
+                iconType="square"
+                formatter={(name) => `${name} — ${PERIOD_NAMES[name] || ''}`}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>

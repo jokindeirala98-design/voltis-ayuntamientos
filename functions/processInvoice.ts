@@ -1,5 +1,33 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+// Tariff structure rules for Spanish electricity tariffs
+function applyTariffRules(tarifa, data) {
+  const normalized = (tarifa || '').toUpperCase().trim();
+  const is20TD = normalized.includes('2.0');
+  const warnings = [];
+
+  if (is20TD) {
+    // 2.0TD: only P1 & P2 for power, P1/P2/P3 for consumption
+    const invalidPotencias = ['potencia_p3', 'potencia_p4', 'potencia_p5', 'potencia_p6'];
+    const invalidConsumos = ['consumo_p4', 'consumo_p5', 'consumo_p6'];
+
+    for (const field of invalidPotencias) {
+      if (data[field] != null) {
+        warnings.push(`Campo ${field} ignorado: tarifa 2.0TD no tiene más de 2 periodos de potencia`);
+        data[field] = null;
+      }
+    }
+    for (const field of invalidConsumos) {
+      if (data[field] != null) {
+        warnings.push(`Campo ${field} ignorado: tarifa 2.0TD solo tiene consumos P1, P2 y P3`);
+        data[field] = null;
+      }
+    }
+  }
+
+  return warnings;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -11,20 +39,33 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Parámetros requeridos: file_url, project_id, file_id' }, { status: 400 });
     }
 
-    // Update file status to "procesando"
     await base44.asServiceRole.entities.UploadedFiles.update(file_id, { processing_status: 'procesando' });
 
-    // Extract data from invoice using LLM with vision
     const extractionPrompt = `Eres un experto en extracción de datos de facturas energéticas españolas. Analiza esta factura y extrae los datos solicitados con la máxima fiabilidad posible.
 
 INSTRUCCIONES CRÍTICAS:
-- Si no puedes extraer un dato con alta confianza, devuelve null para ese campo y explica el motivo en el campo de notas correspondiente.
+- Si no puedes extraer un dato con alta confianza, devuelve null para ese campo y explica el motivo en las notas.
 - NO inventes datos. Prefiere null antes que un dato incorrecto.
 - Para CUPS: debe empezar por "ES", longitud entre 20-22 caracteres. Elimina espacios intermedios.
-- Para Comercializadora: es quien EMITE la factura. NO confundir con la distribuidora (Endesa Distribución, Iberdrola Distribución, UFD, E-Distribución, etc.). La distribuidora suele mencionarse en conceptos de peajes.
-- Para Dirección: distingue entre dirección de SUMINISTRO (punto físico donde se consume energía) y dirección de FACTURACIÓN (donde vive el titular). Son diferentes. Extrae SOLO la de suministro.
-- Para Tarifa: normaliza a uno de: 2.0TD, 3.0TD, 6.1TD, RL1, RL2, RL3, RL4. Si ves "2.0A", "2.1DH" u otras antiguas, intenta mapear al equivalente moderno o devuelve null con nota.
-- Para Potencias: extrae solo valores numéricos en kW. NO confundir con energía (kWh) ni con importes (€).
+- Para Comercializadora: es quien EMITE la factura. NO confundir con la distribuidora (Endesa Distribución, Iberdrola Distribución, UFD, E-Distribución...).
+- Para Dirección: extrae SOLO la dirección del punto de SUMINISTRO (donde se consume energía), NO la dirección de facturación.
+- Para Tarifa: normaliza a uno de: 2.0TD, 3.0TD, 6.1TD, RL1, RL2, RL3, RL4.
+- Para Potencias: extrae valores en kW. NO confundir con energía (kWh) ni importes (€).
+
+REGLA FUNDAMENTAL DE PERIODOS SEGÚN TARIFA:
+
+Tarifa 2.0TD:
+  - Potencias: SOLO P1 y P2. Las columnas P3, P4, P5, P6 de potencia deben ser null.
+  - Consumos: SOLO P1, P2 y P3. Los consumos P4, P5 y P6 deben ser null.
+  - Si ves valores que parecen P4/P5/P6 en una factura 2.0TD, ignóralos y devuelve null.
+
+Tarifa 3.0TD o 6.1TD:
+  - Potencias: P1 a P6 (todos los periodos).
+  - Consumos: P1 a P6 (todos los periodos).
+
+Tarifa Gas (RL1/RL2/RL3/RL4):
+  - No aplica periodos de potencia eléctrica.
+  - Extrae solo consumo_total.
 
 Devuelve JSON con esta estructura exacta:
 {
@@ -51,6 +92,15 @@ Devuelve JSON con esta estructura exacta:
   "potencia_p6": number | null,
   "potencias_confidence": "alta" | "media" | "baja",
   "potencias_notes": string | null,
+  "consumo_p1": number | null,
+  "consumo_p2": number | null,
+  "consumo_p3": number | null,
+  "consumo_p4": number | null,
+  "consumo_p5": number | null,
+  "consumo_p6": number | null,
+  "consumo_total": number | null,
+  "consumos_confidence": "alta" | "media" | "baja",
+  "consumos_notes": string | null,
   "validation_summary": string
 }`;
 
@@ -87,6 +137,15 @@ Devuelve JSON con esta estructura exacta:
             potencia_p6: { type: 'number' },
             potencias_confidence: { type: 'string' },
             potencias_notes: { type: 'string' },
+            consumo_p1: { type: 'number' },
+            consumo_p2: { type: 'number' },
+            consumo_p3: { type: 'number' },
+            consumo_p4: { type: 'number' },
+            consumo_p5: { type: 'number' },
+            consumo_p6: { type: 'number' },
+            consumo_total: { type: 'number' },
+            consumos_confidence: { type: 'string' },
+            consumos_notes: { type: 'string' },
             validation_summary: { type: 'string' }
           }
         }
@@ -103,6 +162,16 @@ Devuelve JSON con esta estructura exacta:
       return Response.json({ error: extractionError || 'Error en extracción LLM' }, { status: 500 });
     }
 
+    // Apply tariff rules — nullify invalid period fields based on detected tariff
+    const tariffWarnings = applyTariffRules(extractedData.tarifa, extractedData);
+
+    // Auto-calculate consumo_total from periods if not already set
+    if (!extractedData.consumo_total) {
+      const total = ['consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6']
+        .reduce((s, k) => s + (extractedData[k] || 0), 0);
+      if (total > 0) extractedData.consumo_total = Math.round(total * 1000) / 1000;
+    }
+
     // Build observations and determine validation status
     const observations = [];
     const criticalFields = ['comercializadora', 'cups', 'tarifa', 'direccion_suministro', 'tipo_suministro'];
@@ -116,8 +185,7 @@ Devuelve JSON con esta estructura exacta:
 
       if (!value) {
         hasMissing = true;
-        if (notes) observations.push(`${field}: ${notes}`);
-        else observations.push(`${field}: No encontrado`);
+        observations.push(`${field}: ${notes || 'No encontrado'}`);
       } else if (confidence === 'baja') {
         hasLowConfidence = true;
         if (notes) observations.push(`${field}: ${notes}`);
@@ -127,6 +195,11 @@ Devuelve JSON con esta estructura exacta:
     }
 
     if (extractedData.potencias_notes) observations.push(`Potencias: ${extractedData.potencias_notes}`);
+    if (extractedData.consumos_notes) observations.push(`Consumos: ${extractedData.consumos_notes}`);
+    if (tariffWarnings.length > 0) {
+      observations.push(...tariffWarnings);
+      if (!hasMissing) hasLowConfidence = true; // flag for review if tariff rules were applied
+    }
 
     let validation_status = 'OK';
     if (hasMissing) validation_status = 'Incompleto';
@@ -138,10 +211,10 @@ Devuelve JSON con esta estructura exacta:
       tarifa: extractedData.tarifa_confidence,
       direccion_suministro: extractedData.direccion_suministro_confidence,
       tipo_suministro: extractedData.tipo_suministro_confidence,
-      potencias: extractedData.potencias_confidence
+      potencias: extractedData.potencias_confidence,
+      consumos: extractedData.consumos_confidence
     });
 
-    // Create SupplyRow
     const supplyRow = await base44.asServiceRole.entities.SupplyRows.create({
       project_id,
       uploaded_file_id: file_id,
@@ -150,24 +223,27 @@ Devuelve JSON con esta estructura exacta:
       tarifa: extractedData.tarifa || '',
       direccion_suministro: extractedData.direccion_suministro || '',
       tipo_suministro: extractedData.tipo_suministro || '',
-      potencia_p1: extractedData.potencia_p1 || null,
-      potencia_p2: extractedData.potencia_p2 || null,
-      potencia_p3: extractedData.potencia_p3 || null,
-      potencia_p4: extractedData.potencia_p4 || null,
-      potencia_p5: extractedData.potencia_p5 || null,
-      potencia_p6: extractedData.potencia_p6 || null,
+      potencia_p1: extractedData.potencia_p1 ?? null,
+      potencia_p2: extractedData.potencia_p2 ?? null,
+      potencia_p3: extractedData.potencia_p3 ?? null,
+      potencia_p4: extractedData.potencia_p4 ?? null,
+      potencia_p5: extractedData.potencia_p5 ?? null,
+      potencia_p6: extractedData.potencia_p6 ?? null,
+      consumo_p1: extractedData.consumo_p1 ?? null,
+      consumo_p2: extractedData.consumo_p2 ?? null,
+      consumo_p3: extractedData.consumo_p3 ?? null,
+      consumo_p4: extractedData.consumo_p4 ?? null,
+      consumo_p5: extractedData.consumo_p5 ?? null,
+      consumo_p6: extractedData.consumo_p6 ?? null,
+      consumo_total: extractedData.consumo_total ?? null,
       archivo_origen: filename,
       validation_status,
       observations: observations.join(' | '),
       confidence_json
     });
 
-    // Update file status
-    await base44.asServiceRole.entities.UploadedFiles.update(file_id, {
-      processing_status: 'completado'
-    });
+    await base44.asServiceRole.entities.UploadedFiles.update(file_id, { processing_status: 'completado' });
 
-    // Create extraction logs for critical fields
     const logEntries = criticalFields.map(field => ({
       uploaded_file_id: file_id,
       field_name: field,

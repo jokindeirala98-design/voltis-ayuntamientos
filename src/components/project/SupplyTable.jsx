@@ -73,7 +73,9 @@ function isCellDisabled(row, colKey) {
   return disabledFor20TD.includes(colKey);
 }
 
-function EditableCell({ value, onChange, type = 'text', disabled = false }) {
+const CONSUMO_NAV_COLS = ['consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6'];
+
+function EditableCell({ value, onChange, type = 'text', disabled = false, cellId, onEnterNav }) {
   if (disabled) {
     return (
       <div className="w-full h-full px-1.5 py-0.5 text-xs text-slate-200 bg-slate-50 cursor-not-allowed select-none" title="No aplica para esta tarifa">
@@ -84,14 +86,18 @@ function EditableCell({ value, onChange, type = 'text', disabled = false }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const inputRef = useRef(null);
+  const committedRef = useRef(false);
 
   const start = () => {
-    setDraft(value ?? '');
+    committedRef.current = false;
+    setDraft(value != null ? String(value) : '');
     setEditing(true);
     setTimeout(() => inputRef.current?.select(), 10);
   };
 
   const commit = () => {
+    if (committedRef.current) return;
+    committedRef.current = true;
     setEditing(false);
     const parsed = type === 'number' && draft !== '' ? parseFloat(draft) : draft;
     if (parsed !== value) onChange(type === 'number' && draft === '' ? null : parsed);
@@ -101,13 +107,14 @@ function EditableCell({ value, onChange, type = 'text', disabled = false }) {
     return (
       <input
         ref={inputRef}
-        type={type === 'number' ? 'number' : 'text'}
+        type="text"
+        inputMode={type === 'number' ? 'decimal' : 'text'}
         value={draft}
         onChange={e => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={e => {
-          if (e.key === 'Enter') commit();
-          if (e.key === 'Escape') setEditing(false);
+          if (e.key === 'Enter') { commit(); onEnterNav && onEnterNav(); }
+          if (e.key === 'Escape') { committedRef.current = true; setEditing(false); }
         }}
         className="w-full h-full px-1.5 py-0.5 text-xs border border-blue-400 outline-none rounded focus:ring-1 ring-blue-300"
       />
@@ -116,8 +123,11 @@ function EditableCell({ value, onChange, type = 'text', disabled = false }) {
 
   return (
     <div
+      tabIndex={0}
       onClick={start}
-      className="w-full h-full px-1.5 py-0.5 cursor-pointer text-xs truncate"
+      onFocus={start}
+      data-cell-id={cellId}
+      className="w-full h-full px-1.5 py-0.5 cursor-pointer text-xs truncate outline-none"
       title={String(value ?? '')}
     >
       {value !== null && value !== undefined && value !== '' ? String(value) : (

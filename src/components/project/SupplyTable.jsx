@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { AlertCircle, CheckCircle2, AlertTriangle, Trash2, Plus, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { AlertCircle, CheckCircle2, AlertTriangle, Trash2, Plus, ChevronUp, ChevronDown, ChevronsUpDown, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const COLUMNS = [
@@ -44,7 +44,7 @@ function getCellBg(row, colKey, confidence) {
   return '';
 }
 
-function EditableCell({ value, onChange, type = 'text', className = '' }) {
+function EditableCell({ value, onChange, type = 'text' }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const inputRef = useRef(null);
@@ -70,19 +70,18 @@ function EditableCell({ value, onChange, type = 'text', className = '' }) {
         onChange={e => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={e => {
-          if (e.key === 'Enter') { commit(); }
-          if (e.key === 'Escape') { setEditing(false); }
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') setEditing(false);
         }}
-        className={`w-full h-full px-1.5 py-0.5 text-xs border border-blue-400 outline-none rounded focus:ring-1 ring-blue-300 ${className}`}
+        className="w-full h-full px-1.5 py-0.5 text-xs border border-blue-400 outline-none rounded focus:ring-1 ring-blue-300"
       />
     );
   }
 
   return (
     <div
-      onDoubleClick={start}
       onClick={start}
-      className={`w-full h-full px-1.5 py-0.5 cursor-pointer text-xs truncate ${className}`}
+      className="w-full h-full px-1.5 py-0.5 cursor-pointer text-xs truncate"
       title={String(value ?? '')}
     >
       {value !== null && value !== undefined && value !== '' ? String(value) : (
@@ -97,43 +96,21 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
   const [sortDir, setSortDir] = useState('asc');
   const [filter, setFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [savingRows, setSavingRows] = useState(new Set());
+  const [savedRows, setSavedRows] = useState(new Set());
+
   const queryClient = useQueryClient();
+  const debounceTimers = useRef({});
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.SupplyRows.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supply-rows', projectId] });
-      if (onRowUpdated) onRowUpdated();
-    }
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.SupplyRows.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supply-rows', projectId] });
-      if (onRowDeleted) onRowDeleted();
-    }
-  });
-
-  const addMutation = useMutation({
-    mutationFn: () => base44.entities.SupplyRows.create({
-      project_id: projectId,
-      validation_status: 'Incompleto',
-      observations: 'Fila añadida manualmente'
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supply-rows', projectId] });
-      if (onRowAdded) onRowAdded();
-    }
-  });
-
+  // ── Optimistic cell update + debounced API save ──────────────────────────
   const handleCellChange = useCallback((row, key, value) => {
     const newData = { [key]: value };
 
     // Auto-recalculate consumo_total if consumo_px changes
     if (key.startsWith('consumo_p')) {
       const updatedRow = { ...row, [key]: value };
-      const total = ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6']
+      const total = ['consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6']
         .reduce((sum, k) => sum + (parseFloat(updatedRow[k]) || 0), 0);
       if (total > 0) newData.consumo_total = Math.round(total * 1000) / 1000;
     }
@@ -148,8 +125,55 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
       }
     }
 
-    updateMutation.mutate({ id: row.id, data: newData });
-  }, [updateMutation]);
+    // 1. Optimistic update in cache — instantaneous, no re-fetch
+    queryClient.setQueryData(['supply-rows', projectId], (old) =>
+      old?.map(r => r.id === row.id ? { ...r, ...newData } : r) || []
+    );
+
+    // 2. Show saving indicator
+    setSavingRows(prev => new Set([...prev, row.id]));
+    setSavedRows(prev => { const s = new Set(prev); s.delete(row.id); return s; });
+
+    // 3. Debounce API call per row (300ms)
+    if (debounceTimers.current[row.id]) clearTimeout(debounceTimers.current[row.id]);
+    debounceTimers.current[row.id] = setTimeout(async () => {
+      try {
+        await base44.entities.SupplyRows.update(row.id, newData);
+        setSavingRows(prev => { const s = new Set(prev); s.delete(row.id); return s; });
+        setSavedRows(prev => new Set([...prev, row.id]));
+        setTimeout(() => setSavedRows(prev => { const s = new Set(prev); s.delete(row.id); return s; }), 2000);
+        if (onRowUpdated) onRowUpdated();
+      } catch (_) {
+        setSavingRows(prev => { const s = new Set(prev); s.delete(row.id); return s; });
+      }
+      delete debounceTimers.current[row.id];
+    }, 300);
+  }, [queryClient, projectId, onRowUpdated]);
+
+  // ── Delete row ────────────────────────────────────────────────────────────
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.SupplyRows.delete(id),
+    onSuccess: (_, id) => {
+      queryClient.setQueryData(['supply-rows', projectId], (old) =>
+        old?.filter(r => r.id !== id) || []
+      );
+      setConfirmDeleteId(null);
+      if (onRowDeleted) onRowDeleted();
+    }
+  });
+
+  // ── Add row ───────────────────────────────────────────────────────────────
+  const addMutation = useMutation({
+    mutationFn: () => base44.entities.SupplyRows.create({
+      project_id: projectId,
+      validation_status: 'Incompleto',
+      observations: 'Fila añadida manualmente'
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supply-rows', projectId] });
+      if (onRowAdded) onRowAdded();
+    }
+  });
 
   const handleSort = (key) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -183,6 +207,9 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
     return sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />;
   };
 
+  // Saving status indicator
+  const totalSaving = savingRows.size;
+
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
@@ -204,22 +231,36 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
           <option value="Revisar">Revisar</option>
           <option value="Incompleto">Incompleto</option>
         </select>
-        <span className="text-xs text-slate-400 ml-auto">{filtered.length} filas</span>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => addMutation.mutate()}
-          disabled={addMutation.isPending}
-          className="gap-1.5 text-xs"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Añadir fila
-        </Button>
+        <span className="text-xs text-slate-400">{filtered.length} filas</span>
+
+        {/* Save status indicator */}
+        <div className="ml-auto flex items-center gap-2">
+          {totalSaving > 0 && (
+            <span className="flex items-center gap-1 text-xs text-slate-400">
+              <Loader2 className="w-3 h-3 animate-spin" /> Guardando cambios…
+            </span>
+          )}
+          {totalSaving === 0 && savedRows.size > 0 && (
+            <span className="flex items-center gap-1 text-xs text-green-600">
+              <Check className="w-3 h-3" /> Cambios guardados
+            </span>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => addMutation.mutate()}
+            disabled={addMutation.isPending}
+            className="gap-1.5 text-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Añadir fila
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
       <div className="flex-1 overflow-auto border border-slate-200 rounded-lg">
-        <table className="text-xs border-collapse" style={{ minWidth: COLUMNS.reduce((s, c) => s + c.width, 50) }}>
+        <table className="text-xs border-collapse" style={{ minWidth: COLUMNS.reduce((s, c) => s + c.width, 90) }}>
           <thead>
             <tr className="bg-slate-50 sticky top-0 z-10">
               <th className="w-10 border-b border-r border-slate-200 px-2 text-slate-400 font-normal">#</th>
@@ -237,7 +278,7 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
                   </div>
                 </th>
               ))}
-              <th className="w-12 border-b border-slate-200 px-2 text-slate-400 font-normal">Acc.</th>
+              <th className="w-20 border-b border-slate-200 px-2 text-slate-400 font-normal">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -249,15 +290,27 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
               </tr>
             )}
             {filtered.map((row, idx) => {
-              const conf = row.confidence_json ? JSON.parse(row.confidence_json) : {};
+              const conf = row.confidence_json ? (() => { try { return JSON.parse(row.confidence_json); } catch { return {}; } })() : {};
               const vc = validationConfig[row.validation_status] || validationConfig.Incompleto;
               const VIcon = vc.icon;
+              const isConfirmingDelete = confirmDeleteId === row.id;
+              const isSaving = savingRows.has(row.id);
+              const isSaved = savedRows.has(row.id);
+
               return (
                 <tr
                   key={row.id}
-                  className="group border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
+                  className={`group border-b border-slate-100 transition-colors ${
+                    isConfirmingDelete ? 'bg-red-50' : 'hover:bg-slate-50/50'
+                  } ${isSaving ? 'opacity-80' : ''}`}
                 >
-                  <td className="border-r border-slate-100 px-2 text-slate-400 text-center">{idx + 1}</td>
+                  <td className="border-r border-slate-100 px-2 text-slate-400 text-center select-none">
+                    <div className="flex items-center justify-center gap-1">
+                      <span>{idx + 1}</span>
+                      {isSaving && <Loader2 className="w-2.5 h-2.5 animate-spin text-blue-400" />}
+                      {!isSaving && isSaved && <Check className="w-2.5 h-2.5 text-green-500" />}
+                    </div>
+                  </td>
                   {COLUMNS.map(col => {
                     if (col.key === 'validation_status') {
                       return (
@@ -269,9 +322,7 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
                         </td>
                       );
                     }
-
                     const cellBg = getCellBg(row, col.key, conf[col.key]);
-
                     return (
                       <td
                         key={col.key}
@@ -286,23 +337,44 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
                       </td>
                     );
                   })}
-                  <td className="px-1 text-center">
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => onViewDetail && onViewDetail(row)}
-                        className="p-0.5 text-slate-400 hover:text-slate-600"
-                        title="Ver detalle"
-                      >
-                        <AlertCircle className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteMutation.mutate(row.id)}
-                        className="p-0.5 text-slate-300 hover:text-red-500"
-                        title="Eliminar fila"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+
+                  {/* Actions cell */}
+                  <td className="px-1 text-center" style={{ width: 80 }}>
+                    {isConfirmingDelete ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => deleteMutation.mutate(row.id)}
+                          disabled={deleteMutation.isPending}
+                          className="text-xs px-1.5 py-0.5 bg-red-600 text-white rounded hover:bg-red-700 font-medium"
+                          title="Confirmar eliminación"
+                        >
+                          {deleteMutation.isPending ? '…' : 'Sí'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="text-xs px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded hover:bg-slate-300"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => onViewDetail && onViewDetail(row)}
+                          className="p-0.5 text-slate-400 hover:text-slate-600"
+                          title="Ver detalle"
+                        >
+                          <AlertCircle className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(row.id)}
+                          className="p-0.5 text-slate-300 hover:text-red-500"
+                          title="Eliminar suministro"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               );

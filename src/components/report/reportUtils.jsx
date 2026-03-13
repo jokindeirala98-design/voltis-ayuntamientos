@@ -67,9 +67,54 @@ export function buildChartData(sums, periods, filterZero = true) {
   return filterZero ? data.filter(d => d.value > 0) : data;
 }
 
-export const PERIOD_COLORS = ['#1e3a8a', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#bfdbfe'];
-export const GAS_COLORS = ['#9a3412', '#c2410c', '#ea580c', '#f97316'];
-export const TARIFA_COLORS = ['#1e3a8a', '#7c3aed', '#065f46', '#92400e', '#be123c', '#0e7490'];
+// ── Color palettes ──────────────────────────────────────────────────────────
+// Distinct professional palette for energy periods
+export const PERIOD_COLORS = [
+  '#1e40af', // P1 Punta — azul corporativo
+  '#7c3aed', // P2 Llano — violeta
+  '#047857', // P3 Valle — verde
+  '#b45309', // P4 — ámbar oscuro
+  '#be123c', // P5 — rojo rosado
+  '#0e7490', // P6 Supervalle — teal
+];
+
+// Gas RL tariffs: warm, clearly distinct tones
+export const GAS_COLORS = [
+  '#7c2d12', // RL1 — caoba oscuro
+  '#c2410c', // RL2 — naranja quemado
+  '#b45309', // RL3 — ámbar
+  '#a16207', // RL4 — dorado oscuro
+];
+
+// Multi-tariff chart colors
+export const TARIFA_COLORS = [
+  '#1e40af', '#7c3aed', '#047857', '#b45309', '#be123c', '#0e7490'
+];
+
 export const PERIOD_NAMES = {
   P1: 'Punta', P2: 'Llano', P3: 'Valle', P4: 'P4', P5: 'P5', P6: 'Supervalle'
 };
+
+// ── Percentage color coding ──────────────────────────────────────────────────
+// Configurable thresholds (easily adjustable here)
+export const PCT_THRESHOLDS = {
+  high: 50,   // >= 50% → rojo
+  medium: 20, // >= 20% → ámbar
+              // <  20% → verde
+};
+
+/**
+ * Returns a Tailwind class string to visually code a percentage by importance.
+ * Usage: <span className={pctBadgeClass(value, total)}>...</span>
+ */
+export function pctBadgeClass(n, total, thresholds = PCT_THRESHOLDS) {
+  if (!total || !n || isNaN(n)) return 'text-slate-500';
+  const pct = (n / total) * 100;
+  if (pct >= thresholds.high) {
+    return 'inline-block rounded px-1.5 py-0.5 text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-200';
+  }
+  if (pct >= thresholds.medium) {
+    return 'inline-block rounded px-1.5 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200';
+  }
+  return 'inline-block rounded px-1.5 py-0.5 text-xs bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200';
+}

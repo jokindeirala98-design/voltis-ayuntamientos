@@ -34,15 +34,35 @@ const validationConfig = {
   Incompleto: { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', label: 'Incompleto' }
 };
 
-function getCellBg(row, colKey, confidence) {
+function getCellBg(row, colKey, confidence, conf) {
   const criticalCols = ['comercializadora', 'cups', 'tarifa', 'direccion_suministro', 'tipo_suministro'];
   if (!criticalCols.includes(colKey)) return '';
   const val = row[colKey];
   if (!val || val === '') return 'bg-red-50';
+  // Tarifa: highlight by origin
+  if (colKey === 'tarifa') {
+    const origin = conf?.tarifa_detectada_por;
+    if (origin === 'potencias' || origin === 'inferencia') return 'bg-amber-50';
+    if (origin === 'factura' || origin === 'manual') return '';
+  }
   if (confidence === 'baja') return 'bg-red-50';
   if (confidence === 'media') return 'bg-amber-50';
   return '';
 }
+
+const TARIFA_ORIGIN_LABELS = {
+  factura: 'Tarifa extraída directamente de la factura',
+  potencias: 'Tarifa deducida por potencia contratada',
+  inferencia: 'Tarifa inferida por estructura del suministro',
+  manual: 'Tarifa corregida manualmente'
+};
+
+const CUPS_ORIGIN_LABELS = {
+  etiqueta_cups: 'CUPS detectado junto a etiqueta explícita',
+  contexto_suministro: 'CUPS detectado en bloque de datos del suministro',
+  patron_ocr: 'CUPS detectado por patrón OCR (sin contexto claro)',
+  manual: 'CUPS corregido manualmente'
+};
 
 // Returns true if this column should be disabled for the given row's tariff
 function isCellDisabled(row, colKey) {

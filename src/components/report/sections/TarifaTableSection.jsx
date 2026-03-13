@@ -14,7 +14,7 @@ export default function TarifaTableSection({ rows, sectionNum }) {
   const sorted = Object.keys(groups).sort();
 
   return (
-    <div className="mb-8" style={{ breakInside: 'avoid' }}>
+    <div className="mb-8" style={{ pageBreakBefore: 'always', breakBefore: 'page', breakInside: 'avoid' }}>
       <SectionTitle number={sectionNum} title="Resumen por Tarifa" subtitle="Distribución de suministros y consumos agrupados por tipo tarifario" />
       <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
         <table className="w-full text-sm">

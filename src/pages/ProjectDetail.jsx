@@ -52,8 +52,33 @@ export default function ProjectDetail() {
     enabled: !!id
   });
 
+  const [confirmDeleteFileId, setConfirmDeleteFileId] = useState(null);
+  const [deleteFileMsg, setDeleteFileMsg] = useState('');
+
   const updateProjectMutation = useMutation({
     mutationFn: (data) => base44.entities.Projects.update(id, data)
+  });
+
+  const deleteFileMutation = useMutation({
+    mutationFn: async (fileId) => {
+      // Delete all supply rows linked to this file
+      const linked = await base44.entities.SupplyRows.filter({ uploaded_file_id: fileId });
+      await Promise.all(linked.map(r => base44.entities.SupplyRows.delete(r.id)));
+      // Delete the file itself
+      await base44.entities.UploadedFiles.delete(fileId);
+      // Mark any existing report as stale
+      if (existingReport) {
+        await base44.entities.ReportDocuments.update(existingReport.id, { status: 'borrador' });
+      }
+    },
+    onSuccess: () => {
+      setConfirmDeleteFileId(null);
+      setDeleteFileMsg('Factura y suministros eliminados correctamente');
+      setTimeout(() => setDeleteFileMsg(''), 3500);
+      refetchFiles();
+      refetchRows();
+      queryClient.invalidateQueries({ queryKey: ['report-latest', id] });
+    }
   });
 
   const onProcessingComplete = () => {

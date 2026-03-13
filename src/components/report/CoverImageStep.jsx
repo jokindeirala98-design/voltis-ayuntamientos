@@ -38,7 +38,7 @@ export default function CoverImageStep({ coverImageUrl, onConfirm, onBack }) {
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900">Portada del informe</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Añade una imagen del ayuntamiento para la portada</p>
+            <p className="text-xs text-slate-500 mt-0.5">Arrastra, pega o adjunta una imagen del ayuntamiento</p>
           </div>
           <button onClick={() => onBack()} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
             <X className="w-4 h-4" />
@@ -77,7 +77,7 @@ export default function CoverImageStep({ coverImageUrl, onConfirm, onBack }) {
             ) : (
               <div className="flex flex-col items-center gap-2 text-slate-400">
                 <ImageIcon className="w-10 h-10" />
-                <p className="text-sm font-medium">Arrastra una imagen aquí o haz clic para subir</p>
+                <p className="text-sm font-medium">Arrastra, pega (Ctrl+V) o haz clic para subir</p>
                 <p className="text-xs">JPG, PNG o WebP</p>
               </div>
             )}

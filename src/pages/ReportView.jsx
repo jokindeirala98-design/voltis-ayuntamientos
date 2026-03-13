@@ -183,7 +183,7 @@ export default function ReportView() {
       {/* Document */}
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div id="report-document" className="bg-white rounded-2xl shadow-md p-8 md:p-12">
-          <HeaderSection project={project} generatedAt={generatedAt} />
+          <HeaderSection project={project} generatedAt={generatedAt} coverImageUrl={report?.cover_image_url} />
           <SuppliesSection rows={rows} sectionNum={nextNum()} />
           <SummaryKPISection rows={rows} classified={classified} sectionNum={nextNum()} />
           <TarifaTableSection rows={rows} sectionNum={nextNum()} />

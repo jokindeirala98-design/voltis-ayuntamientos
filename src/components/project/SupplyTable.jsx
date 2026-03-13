@@ -190,6 +190,13 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
   const handleCellChange = useCallback((row, key, value) => {
     const newData = { [key]: value };
 
+    // If tarifa changes to 2.0TD, clear potencia/consumo periods that don't apply
+    if (key === 'tarifa' && (value || '').toUpperCase().includes('2.0')) {
+      ['potencia_p3','potencia_p4','potencia_p5','potencia_p6','consumo_p4','consumo_p5','consumo_p6'].forEach(k => {
+        newData[k] = null;
+      });
+    }
+
     // Auto-recalculate consumo_total if consumo_px changes
     if (key.startsWith('consumo_p')) {
       const updatedRow = { ...row, [key]: value };

@@ -73,7 +73,21 @@ export default function ReportView() {
     enabled: !!reportId
   });
 
-  const rows = report?.rows_snapshot ? (() => { try { return JSON.parse(report.rows_snapshot); } catch { return []; } })() : [];
+  const { data: rows = [] } = useQuery({
+    queryKey: ['report-rows', report?.rows_snapshot],
+    queryFn: async () => {
+      const snapshot = report?.rows_snapshot;
+      if (!snapshot) return [];
+      // If it's a URL (new format), fetch it
+      if (snapshot.startsWith('http')) {
+        const res = await fetch(snapshot);
+        return await res.json();
+      }
+      // Legacy: inline JSON string
+      try { return JSON.parse(snapshot); } catch { return []; }
+    },
+    enabled: !!report
+  });
   const classified = classifyRows(rows);
   const generatedAt = report?.created_date ? new Date(report.created_date) : new Date();
 

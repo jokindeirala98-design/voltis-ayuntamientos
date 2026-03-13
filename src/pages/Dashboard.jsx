@@ -123,7 +123,7 @@ export default function Dashboard() {
               const sc = statusConfig[project.processing_status] || statusConfig.sin_archivos;
               const Icon = sc.icon;
               return (
-                <div key={project.id} className="bg-white border border-slate-200 rounded-lg p-5 hover:shadow-sm transition-shadow">
+                <div key={project.id} className={`bg-white border rounded-lg p-5 hover:shadow-sm transition-shadow ${confirmDeleteId === project.id ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-slate-900 truncate text-sm">{project.name}</h3>
@@ -131,10 +131,37 @@ export default function Dashboard() {
                         <p className="text-xs text-slate-500 mt-0.5">{project.client_name}</p>
                       )}
                     </div>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${sc.color} ml-2 shrink-0`}>
-                      <Icon className="w-3 h-3" />
-                      {sc.label}
-                    </span>
+                    <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${sc.color}`}>
+                        <Icon className="w-3 h-3" />
+                        {sc.label}
+                      </span>
+                      {confirmDeleteId === project.id ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => deleteMutation.mutate(project.id)}
+                            disabled={deleteMutation.isPending}
+                            className="text-xs px-2 py-0.5 bg-red-600 text-white rounded hover:bg-red-700 font-medium"
+                          >
+                            {deleteMutation.isPending ? '…' : 'Eliminar'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="text-xs px-2 py-0.5 bg-slate-200 text-slate-600 rounded hover:bg-slate-300"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(project.id)}
+                          className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+                          title="Eliminar proyecto"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-4 text-xs text-slate-500 mb-4">

@@ -2,8 +2,8 @@ export default function SectionTitle({ number, title, subtitle, color = 'blue' }
   const colorMap = {
     blue: 'bg-blue-900',
     orange: 'bg-orange-800',
-    violet: 'bg-violet-800',
-    emerald: 'bg-emerald-800',
+    violet: 'bg-violet-700',
+    emerald: 'bg-emerald-700',
   };
   return (
     <div className="flex items-start gap-3 mb-6">

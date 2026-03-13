@@ -184,39 +184,74 @@ export default function ProjectDetail() {
 
         {/* Files list */}
         {files.length > 0 && (
-          <div className="bg-white border border-slate-200 rounded-lg shrink-0 max-h-44 overflow-y-auto">
-            <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white">
+          <div className="bg-white border border-slate-200 rounded-lg shrink-0 max-h-52 overflow-y-auto">
+            <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
               <span className="text-xs font-medium text-slate-600">Documentos procesados ({files.length})</span>
-              <button
-                onClick={() => { refetchFiles(); refetchRows(); }}
-                className="text-slate-400 hover:text-slate-600"
-                title="Actualizar"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            {files.map(f => (
-              <div key={f.id} className="flex items-center gap-3 px-4 py-2 border-b border-slate-50 last:border-0">
-                <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                <span className="text-xs text-slate-700 flex-1 truncate">{f.original_filename}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${fileStatusBg[f.processing_status] || 'bg-slate-100 text-slate-500'}`}>
-                  {f.processing_status === 'completado' ? 'Completado'
-                    : f.processing_status === 'error' ? 'Error'
-                    : f.processing_status === 'procesando' ? 'Procesando…'
-                    : 'Pendiente'}
-                </span>
-                {f.error_message && (
-                  <span className="text-xs text-red-400 truncate max-w-xs" title={f.error_message}>
-                    {f.error_message}
-                  </span>
+              <div className="flex items-center gap-3">
+                {deleteFileMsg && (
+                  <span className="text-xs text-green-600 font-medium">{deleteFileMsg}</span>
                 )}
-                {f.created_date && (
-                  <span className="text-xs text-slate-300 shrink-0">
-                    {format(new Date(f.created_date), 'dd/MM HH:mm', { locale: es })}
-                  </span>
-                )}
+                <button
+                  onClick={() => { refetchFiles(); refetchRows(); }}
+                  className="text-slate-400 hover:text-slate-600"
+                  title="Actualizar"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
               </div>
-            ))}
+            </div>
+            {files.map(f => {
+              const isConfirming = confirmDeleteFileId === f.id;
+              const isDeleting = deleteFileMutation.isPending && confirmDeleteFileId === f.id;
+              return (
+                <div
+                  key={f.id}
+                  className={`flex items-center gap-3 px-4 py-2 border-b border-slate-50 last:border-0 group transition-colors ${isConfirming ? 'bg-red-50' : ''}`}
+                >
+                  <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                  <span className="text-xs text-slate-700 flex-1 truncate">{f.original_filename}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${fileStatusBg[f.processing_status] || 'bg-slate-100 text-slate-500'}`}>
+                    {f.processing_status === 'completado' ? 'Completado'
+                      : f.processing_status === 'error' ? 'Error'
+                      : f.processing_status === 'procesando' ? 'Procesando…'
+                      : 'Pendiente'}
+                  </span>
+                  {f.error_message && (
+                    <span className="text-xs text-red-400 truncate max-w-xs" title={f.error_message}>{f.error_message}</span>
+                  )}
+                  {f.created_date && (
+                    <span className="text-xs text-slate-300 shrink-0">{format(new Date(f.created_date), 'dd/MM HH:mm', { locale: es })}</span>
+                  )}
+                  {/* Delete controls */}
+                  {isConfirming ? (
+                    <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                      <span className="text-xs text-red-600 font-medium">¿Eliminar factura y sus suministros?</span>
+                      <button
+                        onClick={() => deleteFileMutation.mutate(f.id)}
+                        disabled={isDeleting}
+                        className="text-xs px-2 py-0.5 bg-red-600 text-white rounded hover:bg-red-700 font-medium"
+                      >
+                        {isDeleting ? '…' : 'Sí, eliminar'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteFileId(null)}
+                        className="text-xs px-2 py-0.5 bg-slate-200 text-slate-600 rounded hover:bg-slate-300"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDeleteFileId(f.id)}
+                      className="p-0.5 text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                      title="Eliminar factura"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

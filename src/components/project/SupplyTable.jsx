@@ -145,6 +145,7 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [savingRows, setSavingRows] = useState(new Set());
   const [savedRows, setSavedRows] = useState(new Set());
+  const tableRef = useRef(null);
 
   const queryClient = useQueryClient();
   const debounceTimers = useRef({});

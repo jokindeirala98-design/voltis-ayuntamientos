@@ -12,11 +12,8 @@ function KPICard({ label, value, unit, highlight }) {
 }
 
 function SubCard({ label, count, total, color }) {
-  const colorCls = color === 'orange'
-    ? 'border-orange-200 bg-orange-50'
-    : 'border-blue-100 bg-blue-50';
+  const colorCls = color === 'orange' ? 'border-orange-200 bg-orange-50' : 'border-blue-100 bg-blue-50';
   const valueCls = color === 'orange' ? 'text-orange-900' : 'text-blue-900';
-
   return (
     <div className={`rounded-lg border px-4 py-3 flex items-center justify-between ${colorCls}`}>
       <div>
@@ -37,16 +34,16 @@ export default function SummaryKPISection({ rows, classified, sectionNum }) {
   const totalGas = classified.gas.reduce((s, r) => s + (Number(r.consumo_total) || 0), 0);
 
   return (
-    <div className="mb-12">
+    <div style={{ pageBreakBefore: 'always', breakBefore: 'page' }} className="mb-8">
       <SectionTitle number={sectionNum} title="Consumo Acumulado Total" subtitle="Resumen global de todos los suministros del proyecto" />
 
-      <div className="grid grid-cols-2 gap-4 mb-5">
+      <div className="grid grid-cols-2 gap-4 mb-5" style={{ breakInside: 'avoid' }}>
         <KPICard label="Total suministros" value={rows.length} unit="puntos de suministro" />
         <KPICard label="Consumo anual total" value={fmtNum(total)} unit="kWh/año" highlight />
       </div>
 
       {(classified.electric.length > 0 || classified.gas.length > 0) && (
-        <div className="space-y-2">
+        <div className="space-y-2" style={{ breakInside: 'avoid' }}>
           {classified.electric.length > 0 && (
             <SubCard label="Suministros eléctricos" count={classified.electric.length} total={totalElec} color="blue" />
           )}

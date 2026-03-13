@@ -6,9 +6,9 @@ export default function HeaderSection({ project, generatedAt, coverImageUrl }) {
   const today = format(generatedAt || new Date(), "d 'de' MMMM 'de' yyyy", { locale: es });
 
   return (
-    <div className="cover-page flex flex-col" style={{ minHeight: '100vh', pageBreakAfter: 'always', breakAfter: 'page' }}>
+    <div className="cover-page flex flex-col" style={{ height: '257mm', pageBreakAfter: 'always', breakAfter: 'page', overflow: 'hidden' }}>
       {/* Top meta bar */}
-      <div className="flex items-center justify-between pb-3 mb-0 border-b border-slate-200 text-xs text-slate-400">
+      <div className="flex items-center justify-between pb-3 mb-0 border-b border-slate-200 text-xs text-slate-400" style={{ flexShrink: 0 }}>
         <div className="flex items-center gap-2">
           <Zap className="w-3.5 h-3.5" />
           <span className="font-medium tracking-wide uppercase">Auditoría Energética Municipal</span>
@@ -18,19 +18,19 @@ export default function HeaderSection({ project, generatedAt, coverImageUrl }) {
 
       {coverImageUrl ? (
         /* ── With cover image ── */
-        <div className="flex-1 flex flex-col">
-          {/* Image fills most of the page */}
-          <div className="relative flex-1 overflow-hidden rounded-2xl mt-4" style={{ minHeight: '55vh' }}>
+        <div className="flex flex-col" style={{ flex: 1, minHeight: 0 }}>
+          {/* Image: fixed height so text always fits below on same page */}
+          <div className="relative rounded-2xl mt-4 overflow-hidden" style={{ height: '140mm', flexShrink: 0 }}>
             <img
               src={coverImageUrl}
               alt="Portada"
-              className="w-full h-full object-cover"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-950/90 via-blue-950/20 to-transparent" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(7,22,54,0.85) 0%, rgba(7,22,54,0.1) 60%, transparent 100%)' }} />
           </div>
 
-          {/* Text block below image */}
-          <div className="mt-8 pb-6 text-center">
+          {/* Text block below image — always on same page */}
+          <div className="text-center" style={{ paddingTop: '20px', paddingBottom: '16px', flexShrink: 0 }}>
             <p className="text-xs font-semibold tracking-widest uppercase text-slate-400 mb-3">
               Auditoría Energética Municipal
             </p>
@@ -40,7 +40,7 @@ export default function HeaderSection({ project, generatedAt, coverImageUrl }) {
             {project?.client_name && project.client_name !== project.name && (
               <p className="text-slate-500 text-lg mb-3">{project.client_name}</p>
             )}
-            <div className="inline-block bg-blue-900 text-white px-6 py-2 rounded-full mt-2 mb-4">
+            <div className="inline-block text-white px-6 py-2 rounded-full mt-2 mb-4" style={{ backgroundColor: '#1e3a8a' }}>
               <p className="text-lg font-semibold">Estudio de Consumos Energéticos</p>
             </div>
             <p className="text-slate-400 text-sm mt-3">

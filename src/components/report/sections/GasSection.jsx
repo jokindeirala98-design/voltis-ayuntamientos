@@ -46,7 +46,7 @@ export default function GasSection({ rows, sectionNum }) {
       <div className="overflow-hidden rounded-xl border border-orange-200 shadow-sm mb-8" style={{ breakInside: 'avoid' }}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-orange-800 text-white">
+            <tr style={{ backgroundColor: '#9a3412', color: 'white', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
               <th className="text-left px-5 py-3 font-semibold">Tarifa RL</th>
               <th className="text-right px-5 py-3 font-semibold">Nº Suministros</th>
               <th className="text-right px-5 py-3 font-semibold">Consumo (kWh)</th>

@@ -26,11 +26,31 @@ function printToPDF(filename) {
   style.id = '__print_report_style';
   style.textContent = `
     @media print {
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+      }
       body * { visibility: hidden !important; }
-      #report-document, #report-document * { visibility: visible !important; }
-      #report-document { position: absolute; left: 0; top: 0; width: 100%; }
+      #report-document, #report-document * {
+        visibility: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+      #report-document {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: white !important;
+      }
       .no-print { display: none !important; }
-      @page { margin: 16mm; }
+      @page { margin: 12mm; size: A4 portrait; }
     }
   `;
   document.head.appendChild(style);

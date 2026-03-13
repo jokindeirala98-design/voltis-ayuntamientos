@@ -19,7 +19,7 @@ export default function TarifaTableSection({ rows, sectionNum }) {
       <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-blue-900 text-white">
+            <tr style={{ backgroundColor: '#1e3a8a', color: 'white', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
               <th className="text-left px-5 py-3 font-semibold">Tarifa</th>
               <th className="text-right px-5 py-3 font-semibold">Nº Suministros</th>
               <th className="text-right px-5 py-3 font-semibold">Consumo Total (kWh)</th>

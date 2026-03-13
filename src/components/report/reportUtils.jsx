@@ -77,53 +77,40 @@ export function buildChartData(sums, periods, filterZero = true) {
 }
 
 // ── Color palettes ──────────────────────────────────────────────────────────
-// Distinct professional palette for energy periods
 export const PERIOD_COLORS = [
-  '#1e40af', // P1 Punta — azul corporativo
-  '#7c3aed', // P2 Llano — violeta
-  '#047857', // P3 Valle — verde
-  '#b45309', // P4 — ámbar oscuro
-  '#be123c', // P5 — rojo rosado
-  '#0e7490', // P6 Supervalle — teal
+  '#3B82F6', // P1 — blue-500
+  '#06B6D4', // P2 — cyan-500
+  '#10B981', // P3 — emerald-500
+  '#8B5CF6', // P4 — violet-500
+  '#F59E0B', // P5 — amber-500
+  '#EF4444', // P6 — red-500
 ];
 
-// Gas RL tariffs: warm, clearly distinct tones
 export const GAS_COLORS = [
-  '#7c2d12', // RL1 — caoba oscuro
-  '#c2410c', // RL2 — naranja quemado
-  '#b45309', // RL3 — ámbar
-  '#a16207', // RL4 — dorado oscuro
+  '#F97316', // RL1 — orange-500
+  '#EF4444', // RL2 — red-500
+  '#EAB308', // RL3 — yellow-500
+  '#84CC16', // RL4 — lime-500
 ];
 
-// Multi-tariff chart colors
 export const TARIFA_COLORS = [
-  '#1e40af', '#7c3aed', '#047857', '#b45309', '#be123c', '#0e7490'
+  '#3B82F6', '#06B6D4', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'
 ];
 
 export const PERIOD_NAMES = {
   P1: 'Punta', P2: 'Llano', P3: 'Valle', P4: 'P4', P5: 'P5', P6: 'Supervalle'
 };
 
-// ── Percentage color coding ──────────────────────────────────────────────────
-// Configurable thresholds (easily adjustable here)
-export const PCT_THRESHOLDS = {
-  high: 50,   // >= 50% → rojo
-  medium: 20, // >= 20% → ámbar
-              // <  20% → verde
-};
-
 /**
- * Returns a Tailwind class string to visually code a percentage by importance.
- * Usage: <span className={pctBadgeClass(value, total)}>...</span>
+ * Returns Tailwind classes for a full-cell % indicator.
+ * <td className="p-0"><span className={pctBadgeClass(...)}>{fmtPct(...)}</span></td>
  */
-export function pctBadgeClass(n, total, thresholds = PCT_THRESHOLDS) {
-  if (!total || !n || isNaN(n)) return 'text-slate-500';
+export function pctBadgeClass(n, total) {
+  if (!total || !n || isNaN(n) || Number(n) === 0) {
+    return 'block w-full px-4 py-2.5 text-xs font-medium text-right text-slate-400';
+  }
   const pct = (n / total) * 100;
-  if (pct >= thresholds.high) {
-    return 'inline-block rounded px-1.5 py-0.5 text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-200';
-  }
-  if (pct >= thresholds.medium) {
-    return 'inline-block rounded px-1.5 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200';
-  }
-  return 'inline-block rounded px-1.5 py-0.5 text-xs bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200';
+  if (pct >= 40) return 'block w-full px-4 py-2.5 text-xs font-bold text-right bg-red-500 text-white';
+  if (pct >= 20) return 'block w-full px-4 py-2.5 text-xs font-bold text-right bg-amber-400 text-amber-900';
+  return 'block w-full px-4 py-2.5 text-xs font-bold text-right bg-emerald-500 text-white';
 }

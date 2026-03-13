@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [newProjectName, setNewProjectName] = useState('');
   const [newClientName, setNewClientName] = useState('');
   const [newNotes, setNewNotes] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: projects = [], isLoading } = useQuery({

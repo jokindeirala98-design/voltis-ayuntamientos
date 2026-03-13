@@ -54,6 +54,15 @@ export function getValidConsumoPeriods(label) {
   return ['consumo_p1','consumo_p2','consumo_p3'];
 }
 
+// Returns only valid POTENCIA period keys for a given tariff label
+// 2.0TD: only P1, P2
+// 3.0TD / 6.1: P1–P6
+export function getValidPotenciaPeriods(label) {
+  const upper = (label || '').toUpperCase();
+  if (upper.includes('3.0') || upper.includes('6.1')) return ['potencia_p1','potencia_p2','potencia_p3','potencia_p4','potencia_p5','potencia_p6'];
+  return ['potencia_p1','potencia_p2'];
+}
+
 export function fmtNum(n) {
   if (n === null || n === undefined || isNaN(n)) return '—';
   return Math.round(n).toLocaleString('es-ES');

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import ValidationModal from '@/components/report/ValidationModal';
-import { validateRows, classifyRows } from '@/components/report/reportUtils';
+import CoverImageStep from '@/components/report/CoverImageStep';
+import { validateRows } from '@/components/report/reportUtils';
 import { FileBarChart2, Loader2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -13,6 +14,7 @@ export default function GenerateReportButton({ rows, project, existingReport }) 
   const [showValidation, setShowValidation] = useState(false);
   const [validationIssues, setValidationIssues] = useState([]);
   const [generating, setGenerating] = useState(false);
+  const [showCoverStep, setShowCoverStep] = useState(false);
 
   const handleGenerate = async () => {
     const issues = validateRows(rows);
@@ -21,13 +23,16 @@ export default function GenerateReportButton({ rows, project, existingReport }) 
       setShowValidation(true);
       return;
     }
+    setShowCoverStep(true);
+  };
 
+  const doGenerate = async (coverImageUrl) => {
+    setShowCoverStep(false);
     setGenerating(true);
     const today = format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: es });
     const title = `Estudio de Consumos Energéticos — ${project?.name || ''} — ${today}`;
     const version = (existingReport?.report_version || 0) + 1;
 
-    // Upload rows snapshot as a file to avoid field size limits
     const snapshotBlob = new Blob([JSON.stringify(rows)], { type: 'application/json' });
     const snapshotFile = new File([snapshotBlob], 'rows_snapshot.json', { type: 'application/json' });
     const { file_url: snapshotUrl } = await base44.integrations.Core.UploadFile({ file: snapshotFile });
@@ -39,7 +44,8 @@ export default function GenerateReportButton({ rows, project, existingReport }) 
       status: 'generado',
       lectura_rapida: existingReport?.lectura_rapida || '',
       optimizacion_notes: existingReport?.optimizacion_notes || '',
-      rows_snapshot: snapshotUrl
+      rows_snapshot: snapshotUrl,
+      cover_image_url: coverImageUrl || null
     });
 
     setGenerating(false);
@@ -77,6 +83,14 @@ export default function GenerateReportButton({ rows, project, existingReport }) 
         onClose={() => setShowValidation(false)}
         issues={validationIssues}
       />
+
+      {showCoverStep && (
+        <CoverImageStep
+          coverImageUrl={existingReport?.cover_image_url}
+          onConfirm={doGenerate}
+          onBack={() => setShowCoverStep(false)}
+        />
+      )}
     </>
   );
 }

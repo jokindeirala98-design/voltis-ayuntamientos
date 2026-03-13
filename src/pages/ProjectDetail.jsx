@@ -7,6 +7,7 @@ import SupplyTable from '@/components/project/SupplyTable';
 import FileDetailModal from '@/components/project/FileDetailModal';
 import ExportExcelButton from '@/components/project/ExportExcelButton';
 import GenerateReportButton from '@/components/report/GenerateReportButton';
+import QuickConsumoModal from '@/components/project/QuickConsumoModal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -51,6 +52,7 @@ export default function ProjectDetail() {
     enabled: !!id
   });
 
+  const [showQuickConsumo, setShowQuickConsumo] = useState(false);
   const [confirmDeleteFileId, setConfirmDeleteFileId] = useState(null);
   const [deleteFileMsg, setDeleteFileMsg] = useState('');
 
@@ -257,10 +259,22 @@ export default function ProjectDetail() {
         {/* Supply Table */}
         <div className="bg-white border border-slate-200 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
-            <span className="text-sm font-medium text-slate-700">
-              Tabla de suministros
-              <span className="text-xs text-slate-400 ml-2 font-normal">Haz clic en cualquier celda para editar</span>
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-slate-700">
+                Tabla de suministros
+                <span className="text-xs text-slate-400 ml-2 font-normal">Haz clic en cualquier celda para editar</span>
+              </span>
+              {rows.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowQuickConsumo(true)}
+                  className="gap-1.5 text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
+                >
+                  ⚡ Consumos
+                </Button>
+              )}
+            </div>
             <div className="flex items-center gap-3 text-xs text-slate-400">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-red-200 inline-block" /> Campo requerido vacío o baja confianza</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-amber-100 inline-block" /> Confianza media</span>
@@ -279,6 +293,15 @@ export default function ProjectDetail() {
           </div>
         </div>
       </div>
+
+      {showQuickConsumo && (
+        <QuickConsumoModal
+          rows={rows}
+          projectId={id}
+          onClose={() => setShowQuickConsumo(false)}
+          onUpdated={refetchRows}
+        />
+      )}
 
       {/* File detail modal */}
       <FileDetailModal

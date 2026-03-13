@@ -150,6 +150,31 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
   const queryClient = useQueryClient();
   const debounceTimers = useRef({});
 
+  // Navigate to next consumo cell on Enter
+  const handleEnterNav = useCallback((rowId, colKey, filteredRows) => {
+    const colIdx = CONSUMO_NAV_COLS.indexOf(colKey);
+    if (colIdx === -1) return;
+
+    const nextCol = CONSUMO_NAV_COLS[colIdx + 1];
+    if (nextCol) {
+      // Next period in same row
+      setTimeout(() => {
+        const el = tableRef.current?.querySelector(`[data-cell-id="${rowId}_${nextCol}"]`);
+        el?.focus();
+      }, 20);
+    } else {
+      // Move to first consumo of next row
+      const rowIdx = filteredRows.findIndex(r => r.id === rowId);
+      const nextRow = filteredRows[rowIdx + 1];
+      if (nextRow) {
+        setTimeout(() => {
+          const el = tableRef.current?.querySelector(`[data-cell-id="${nextRow.id}_consumo_p1"]`);
+          el?.focus();
+        }, 20);
+      }
+    }
+  }, []);
+
   // ── Optimistic cell update + debounced API save ──────────────────────────
   const handleCellChange = useCallback((row, key, value) => {
     const newData = { [key]: value };

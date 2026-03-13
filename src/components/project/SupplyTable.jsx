@@ -348,6 +348,7 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
                         <EditableCell
                           value={row[col.key]}
                           type={col.type || 'text'}
+                          disabled={isCellDisabled(row, col.key)}
                           onChange={val => handleCellChange(row, col.key, val)}
                         />
                       </td>

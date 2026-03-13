@@ -44,7 +44,23 @@ function getCellBg(row, colKey, confidence) {
   return '';
 }
 
-function EditableCell({ value, onChange, type = 'text' }) {
+// Returns true if this column should be disabled for the given row's tariff
+function isCellDisabled(row, colKey) {
+  const tarifa = (row.tarifa || '').toUpperCase();
+  const is20TD = tarifa.includes('2.0');
+  if (!is20TD) return false;
+  const disabledFor20TD = ['potencia_p3', 'potencia_p4', 'potencia_p5', 'potencia_p6', 'consumo_p4', 'consumo_p5', 'consumo_p6'];
+  return disabledFor20TD.includes(colKey);
+}
+
+function EditableCell({ value, onChange, type = 'text', disabled = false }) {
+  if (disabled) {
+    return (
+      <div className="w-full h-full px-1.5 py-0.5 text-xs text-slate-200 bg-slate-50 cursor-not-allowed select-none" title="No aplica para esta tarifa">
+        —
+      </div>
+    );
+  }
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const inputRef = useRef(null);

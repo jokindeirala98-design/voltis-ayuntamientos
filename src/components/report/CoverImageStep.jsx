@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Upload, ImageIcon, X, Loader2 } from 'lucide-react';
+import { ImageIcon, X, Loader2 } from 'lucide-react';
 
 export default function CoverImageStep({ coverImageUrl, onConfirm, onBack }) {
   const [imageUrl, setImageUrl] = useState(coverImageUrl || null);
@@ -22,6 +22,16 @@ export default function CoverImageStep({ coverImageUrl, onConfirm, onBack }) {
     if (file && file.type.startsWith('image/')) handleFile(file);
   };
 
+  // Paste support
+  const handlePaste = useCallback(async (e) => {
+    const items = Array.from(e.clipboardData?.items || []);
+    const imgItem = items.find(it => it.type.startsWith('image/'));
+    if (imgItem) {
+      const file = imgItem.getAsFile();
+      if (file) handleFile(file);
+    }
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
@@ -40,7 +50,10 @@ export default function CoverImageStep({ coverImageUrl, onConfirm, onBack }) {
           <div
             onDrop={handleDrop}
             onDragOver={e => e.preventDefault()}
+            onPaste={handlePaste}
             onClick={() => !uploading && fileRef.current?.click()}
+            tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && fileRef.current?.click()}
             className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all"
           >
             <input
@@ -56,6 +69,7 @@ export default function CoverImageStep({ coverImageUrl, onConfirm, onBack }) {
                 <p className="text-sm text-slate-500">Subiendo imagen…</p>
               </div>
             ) : imageUrl ? (
+
               <div className="flex flex-col items-center gap-3">
                 <img src={imageUrl} alt="Portada" className="h-40 object-cover rounded-lg shadow border border-slate-200" />
                 <p className="text-xs text-slate-500">Haz clic para cambiar la imagen</p>

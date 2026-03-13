@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -12,17 +12,15 @@ import TarifaTableSection from '@/components/report/sections/TarifaTableSection'
 import PeriodosTotalSection from '@/components/report/sections/PeriodosTotalSection';
 import TarifaDetailSection from '@/components/report/sections/TarifaDetailSection';
 import GasSection from '@/components/report/sections/GasSection';
-import LecturaRapidaSection from '@/components/report/sections/LecturaRapidaSection';
-import OptimizacionSection from '@/components/report/sections/OptimizacionSection';
-import PrecioIndexadoSection from '@/components/report/sections/PrecioIndexadoSection';
+import InformeBreveSection from '@/components/report/sections/InformeBreveSection';
+import GraficosInteresSection from '@/components/report/sections/GraficosInteresSection';
+import FooterSection from '@/components/report/sections/FooterSection';
 import {
   ArrowLeft, Edit3, Save, FileText, Loader2, CheckCircle2, AlertOctagon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 
-// PDF export via print
 function printToPDF(filename) {
   const style = document.createElement('style');
   style.id = '__print_report_style';
@@ -30,8 +28,9 @@ function printToPDF(filename) {
     @media print {
       body * { visibility: hidden !important; }
       #report-document, #report-document * { visibility: visible !important; }
-      #report-document { position: absolute; left: 0; top: 0; width: 100%; padding: 24px; }
+      #report-document { position: absolute; left: 0; top: 0; width: 100%; }
       .no-print { display: none !important; }
+      @page { margin: 16mm; }
     }
   `;
   document.head.appendChild(style);
@@ -45,8 +44,7 @@ export default function ReportView() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [lecturaRapida, setLecturaRapida] = useState('');
-  const [optimizacionNotes, setOptimizacionNotes] = useState({});
+  const [informeBreve, setInformeBreve] = useState('');
   const [saved, setSaved] = useState(false);
 
   const { data: project } = useQuery({
@@ -61,12 +59,7 @@ export default function ReportView() {
       const r = await base44.entities.ReportDocuments.filter({ id: reportId });
       const doc = r[0];
       if (doc) {
-        setLecturaRapida(doc.lectura_rapida || '');
-        try {
-          setOptimizacionNotes(doc.optimizacion_notes ? JSON.parse(doc.optimizacion_notes) : {});
-        } catch (_) {
-          setOptimizacionNotes({});
-        }
+        setInformeBreve(doc.lectura_rapida || '');
       }
       return doc;
     },
@@ -78,16 +71,15 @@ export default function ReportView() {
     queryFn: async () => {
       const snapshot = report?.rows_snapshot;
       if (!snapshot) return [];
-      // If it's a URL (new format), fetch it
       if (snapshot.startsWith('http')) {
         const res = await fetch(snapshot);
         return await res.json();
       }
-      // Legacy: inline JSON string
       try { return JSON.parse(snapshot); } catch { return []; }
     },
     enabled: !!report
   });
+
   const classified = classifyRows(rows);
   const generatedAt = report?.created_date ? new Date(report.created_date) : new Date();
 
@@ -96,8 +88,7 @@ export default function ReportView() {
 
   const saveMutation = useMutation({
     mutationFn: () => base44.entities.ReportDocuments.update(reportId, {
-      lectura_rapida: lecturaRapida,
-      optimizacion_notes: JSON.stringify(optimizacionNotes)
+      lectura_rapida: informeBreve,
     }),
     onSuccess: () => {
       setSaved(true);
@@ -116,8 +107,7 @@ export default function ReportView() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex items-center gap-3 text-slate-500">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          Cargando informe…
+          <Loader2 className="w-5 h-5 animate-spin" /> Cargando informe…
         </div>
       </div>
     );
@@ -148,8 +138,8 @@ export default function ReportView() {
           {report.status === 'borrador' && (
             <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
               <AlertOctagon className="w-4 h-4 text-amber-600 shrink-0" />
-              <span className="text-xs text-amber-800 font-medium">Informe desactualizado — los datos del proyecto han cambiado.</span>
-              <Link to={`/project/${id}`} className="text-xs text-amber-700 underline font-medium whitespace-nowrap">Regenerar informe</Link>
+              <span className="text-xs text-amber-800 font-medium">Informe desactualizado.</span>
+              <Link to={`/project/${id}`} className="text-xs text-amber-700 underline font-medium whitespace-nowrap">Regenerar</Link>
             </div>
           )}
           <div className="flex items-center gap-2 ml-auto flex-wrap">
@@ -158,13 +148,12 @@ export default function ReportView() {
                 <CheckCircle2 className="w-3.5 h-3.5" /> Guardado
               </span>
             )}
-
             {isEditing ? (
               <>
                 <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>Cancelar</Button>
                 <Button size="sm" className="bg-blue-900 hover:bg-blue-800 gap-1.5" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
                   {saveMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                  Guardar cambios
+                  Guardar
                 </Button>
               </>
             ) : (
@@ -172,7 +161,6 @@ export default function ReportView() {
                 <Edit3 className="w-3.5 h-3.5" /> Editar
               </Button>
             )}
-
             <Button size="sm" variant="outline" className="gap-1.5" onClick={handleExportPDF}>
               <FileText className="w-3.5 h-3.5" /> Exportar PDF
             </Button>
@@ -183,18 +171,37 @@ export default function ReportView() {
       {/* Document */}
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div id="report-document" className="bg-white rounded-2xl shadow-md p-8 md:p-12">
+          {/* 1. Cover – page break after */}
           <HeaderSection project={project} generatedAt={generatedAt} coverImageUrl={report?.cover_image_url} />
+
+          {/* 2. Suministros */}
           <SuppliesSection rows={rows} sectionNum={nextNum()} />
+
+          {/* 3. KPI total – page break before */}
           <SummaryKPISection rows={rows} classified={classified} sectionNum={nextNum()} />
+
+          {/* 4. Resumen por tarifa – page break before */}
           <TarifaTableSection rows={rows} sectionNum={nextNum()} />
+
+          {/* 5. Periodos totales (electricity) – page break before */}
           <PeriodosTotalSection classified={classified} sectionNum={nextNum()} />
+
+          {/* 6-N. Detail per tariff – page break before each */}
           {classified.td20.length > 0 && <TarifaDetailSection tarifaLabel="2.0TD" rows={classified.td20} sectionNum={nextNum()} />}
           {classified.td30.length > 0 && <TarifaDetailSection tarifaLabel="3.0TD" rows={classified.td30} sectionNum={nextNum()} />}
           {classified.td61.length > 0 && <TarifaDetailSection tarifaLabel="6.1TD" rows={classified.td61} sectionNum={nextNum()} />}
+
+          {/* Gas – page break before */}
           {classified.gas.length > 0 && <GasSection rows={classified.gas} sectionNum={nextNum()} />}
-          <LecturaRapidaSection text={lecturaRapida} onChange={setLecturaRapida} isEditing={isEditing} sectionNum={nextNum()} />
-          <OptimizacionSection classified={classified} notes={optimizacionNotes} onNotesChange={setOptimizacionNotes} isEditing={isEditing} sectionNum={nextNum()} />
-          <PrecioIndexadoSection sectionNum={nextNum()} />
+
+          {/* Informe breve – page break before */}
+          <InformeBreveSection text={informeBreve} onChange={setInformeBreve} isEditing={isEditing} sectionNum={nextNum()} />
+
+          {/* Gráficos de interés – page break before */}
+          <GraficosInteresSection sectionNum={nextNum()} />
+
+          {/* Footer / legal – page break before */}
+          <FooterSection />
         </div>
       </div>
     </div>

@@ -16,6 +16,7 @@ function OutsideLabel({ cx, cy, midAngle, outerRadius, percent, name }) {
   );
 }
 
+// GasSection with page break
 export default function GasSection({ rows, sectionNum }) {
   const totalGas = rows.reduce((s, r) => s + (Number(r.consumo_total) || 0), 0);
 

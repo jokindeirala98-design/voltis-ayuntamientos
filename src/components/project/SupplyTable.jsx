@@ -415,6 +415,8 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
                           type={col.type || 'text'}
                           disabled={isCellDisabled(row, col.key)}
                           onChange={val => handleCellChange(row, col.key, val)}
+                          cellId={`${row.id}_${col.key}`}
+                          onEnterNav={CONSUMO_NAV_COLS.includes(col.key) ? () => handleEnterNav(row.id, col.key, filtered) : undefined}
                         />
                       </td>
                     );

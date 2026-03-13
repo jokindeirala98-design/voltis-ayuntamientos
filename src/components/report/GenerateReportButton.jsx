@@ -27,6 +27,11 @@ export default function GenerateReportButton({ rows, project, existingReport }) 
     const title = `Estudio de Consumos Energéticos — ${project?.name || ''} — ${today}`;
     const version = (existingReport?.report_version || 0) + 1;
 
+    // Upload rows snapshot as a file to avoid field size limits
+    const snapshotBlob = new Blob([JSON.stringify(rows)], { type: 'application/json' });
+    const snapshotFile = new File([snapshotBlob], 'rows_snapshot.json', { type: 'application/json' });
+    const { file_url: snapshotUrl } = await base44.integrations.Core.UploadFile({ file: snapshotFile });
+
     const doc = await base44.entities.ReportDocuments.create({
       project_id: project.id,
       title,
@@ -34,7 +39,7 @@ export default function GenerateReportButton({ rows, project, existingReport }) 
       status: 'generado',
       lectura_rapida: existingReport?.lectura_rapida || '',
       optimizacion_notes: existingReport?.optimizacion_notes || '',
-      rows_snapshot: JSON.stringify(rows)
+      rows_snapshot: snapshotUrl
     });
 
     setGenerating(false);

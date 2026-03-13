@@ -51,7 +51,7 @@ export default function HeaderSection({ project, generatedAt, coverImageUrl }) {
         </div>
       ) : (
         /* ── Without cover image ── */
-        <div className="flex-1 flex flex-col items-center justify-center text-center py-16 px-8">
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-16 px-8" style={{ flex: 1 }}>
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-blue-900 text-white mb-8 shadow-xl">
             <Zap className="w-10 h-10" />
           </div>

@@ -30,24 +30,7 @@ function printToPDF(filename) {
       #report-document, #report-document * { visibility: visible !important; }
       #report-document { position: absolute; left: 0; top: 0; width: 100%; }
       .no-print { display: none !important; }
-      @page { margin: 15mm 18mm; size: A4 portrait; }
-
-      /* Evitar cortes en filas de tabla */
-      table { break-inside: auto !important; }
-      thead { display: table-header-group; }
-      tfoot { display: table-footer-group; }
-      tr { break-inside: avoid !important; page-break-inside: avoid !important; }
-
-      /* Imágenes y gráficos intactos */
-      img { break-inside: avoid !important; page-break-inside: avoid !important; max-width: 100% !important; }
-      .recharts-wrapper { break-inside: avoid !important; page-break-inside: avoid !important; }
-      .recharts-responsive-container { overflow: visible !important; }
-
-      /* Títulos no se separan de su contenido */
-      h1, h2, h3, h4 { break-after: avoid !important; page-break-after: avoid !important; }
-
-      /* Huérfanos y viudas */
-      p { orphans: 3; widows: 3; }
+      @page { margin: 16mm; }
     }
   `;
   document.head.appendChild(style);

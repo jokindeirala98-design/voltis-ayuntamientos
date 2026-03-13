@@ -16,7 +16,6 @@ function OutsideLabel({ cx, cy, midAngle, outerRadius, percent, name }) {
   );
 }
 
-// GasSection with page break
 export default function GasSection({ rows, sectionNum }) {
   const totalGas = rows.reduce((s, r) => s + (Number(r.consumo_total) || 0), 0);
 
@@ -35,7 +34,7 @@ export default function GasSection({ rows, sectionNum }) {
   }));
 
   return (
-    <div style={{ pageBreakBefore: 'always', breakBefore: 'page', breakInside: 'avoid' }} className="mb-8">
+    <div style={{ pageBreakBefore: 'always', breakBefore: 'page' }} className="mb-8">
       <SectionTitle
         number={sectionNum}
         title="Suministros de Gas"

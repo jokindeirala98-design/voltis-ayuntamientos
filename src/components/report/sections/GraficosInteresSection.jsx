@@ -21,7 +21,7 @@ export default function GraficosInteresSection({ sectionNum }) {
         subtitle="Referencia visual para el análisis de periodos y precios energéticos"
         color="emerald"
       />
-      <div className="flex flex-col gap-10" style={{ breakInside: 'avoid' }}>
+      <div className="flex flex-col gap-10">
         {PRESET_IMAGES.map((url, i) => (
           <div key={i} style={{ breakInside: 'avoid' }}>
             <img

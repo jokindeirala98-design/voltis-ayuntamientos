@@ -34,7 +34,7 @@ export default function SummaryKPISection({ rows, classified, sectionNum }) {
   const totalGas = classified.gas.reduce((s, r) => s + (Number(r.consumo_total) || 0), 0);
 
   return (
-    <div style={{ pageBreakBefore: 'always', breakBefore: 'page', breakInside: 'avoid' }} className="mb-8">
+    <div style={{ pageBreakBefore: 'always', breakBefore: 'page' }} className="mb-8">
       <SectionTitle number={sectionNum} title="Consumo Acumulado Total" subtitle="Resumen global de todos los suministros del proyecto" />
 
       <div className="grid grid-cols-2 gap-4 mb-5" style={{ breakInside: 'avoid' }}>

@@ -17,7 +17,7 @@ export default function InformeBreveSection({ text, onChange, isEditing, section
           className="w-full min-h-64 p-4 text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-400 resize-y leading-relaxed text-slate-700"
         />
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 min-h-48" style={{ breakInside: 'avoid' }}>
+        <div className="rounded-xl border border-slate-200 bg-white p-6 min-h-48">
           {text ? (
             <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{text}</p>
           ) : (

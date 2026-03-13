@@ -103,7 +103,7 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
       </div>
 
       {/* Pie chart */}
-      <div className="mb-8" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+      <div className="mb-8" style={{ breakInside: 'avoid' }}>
         <p className="text-sm font-semibold text-slate-600 mb-4 text-center">Distribución porcentual por periodo</p>
         <ResponsiveContainer width="100%" height={320}>
           <PieChart>

@@ -33,12 +33,8 @@ export function classifyRows(rows) {
 export function sumPeriods(rows) {
   const s = { p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, p6: 0, total: 0 };
   rows.forEach(r => {
-    s.p1 += Number(r.consumo_p1) || 0;
-    s.p2 += Number(r.consumo_p2) || 0;
-    s.p3 += Number(r.consumo_p3) || 0;
-    s.p4 += Number(r.consumo_p4) || 0;
-    s.p5 += Number(r.consumo_p5) || 0;
-    s.p6 += Number(r.consumo_p6) || 0;
+    const validKeys = getValidConsumoPeriods(r.tarifa);
+    validKeys.forEach(key => { s[key.replace('consumo_', '')] += Number(r[key]) || 0; });
     s.total += Number(r.consumo_total) || 0;
   });
   return s;

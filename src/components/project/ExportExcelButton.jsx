@@ -25,9 +25,26 @@ export default function ExportExcelButton({ rows, projectName }) {
     setExporting(true);
     try {
       const data = rows.map(row => {
+        const tarifa = (row.tarifa || '').toUpperCase();
+        const is20TD = tarifa.includes('2.0');
+        const is30or61 = tarifa.includes('3.0') || tarifa.includes('6.1');
+        const isElec = row.tipo_suministro === 'Electricidad';
+
+        const disabledPot = isElec && is20TD
+          ? new Set(['potencia_p3','potencia_p4','potencia_p5','potencia_p6'])
+          : new Set();
+        const disabledCons = isElec && !is30or61
+          ? new Set(['consumo_p4','consumo_p5','consumo_p6'])
+          : new Set();
+
         const obj = {};
         HEADERS.forEach((h, i) => {
-          obj[h] = row[KEYS[i]] ?? '';
+          const key = KEYS[i];
+          if (disabledPot.has(key) || disabledCons.has(key)) {
+            obj[h] = null;
+          } else {
+            obj[h] = row[key] ?? '';
+          }
         });
         return obj;
       });

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { AlertCircle, CheckCircle2, AlertTriangle, Trash2, Plus, ChevronUp, ChevronDown, ChevronsUpDown, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ImportConsumosButton from '@/components/project/ImportConsumosButton';
 
 const COLUMNS = [
   { key: 'comercializadora', label: 'Comercializadora', width: 160, critical: true },

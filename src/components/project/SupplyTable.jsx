@@ -358,12 +358,21 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
                         </td>
                       );
                     }
-                    const cellBg = getCellBg(row, col.key, conf[col.key]);
+                    const cellBg = getCellBg(row, col.key, conf[col.key], conf);
+                    // Tooltip for tarifa and cups origin
+                    let cellTitle = undefined;
+                    if (col.key === 'tarifa' && conf?.tarifa_detectada_por) {
+                      cellTitle = TARIFA_ORIGIN_LABELS[conf.tarifa_detectada_por] || conf.tarifa_detectada_por;
+                    }
+                    if (col.key === 'cups' && conf?.cups_detectado_por) {
+                      cellTitle = CUPS_ORIGIN_LABELS[conf.cups_detectado_por] || conf.cups_detectado_por;
+                    }
                     return (
                       <td
                         key={col.key}
                         className={`border-r border-slate-100 ${cellBg} p-0`}
                         style={{ width: col.width, height: 30 }}
+                        title={cellTitle}
                       >
                         <EditableCell
                           value={row[col.key]}

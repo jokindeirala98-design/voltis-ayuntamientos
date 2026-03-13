@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Plus, FolderOpen, Calendar, FileText, CheckCircle2,
-  AlertCircle, Clock, ChevronRight, Zap
+  AlertCircle, Clock, ChevronRight, Zap, Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';

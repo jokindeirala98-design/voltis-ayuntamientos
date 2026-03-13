@@ -46,7 +46,7 @@ export default function SuppliesSection({ rows, sectionNum }) {
       )}
 
       {gas.length > 0 && (
-        <div>
+        <div style={{ breakInside: 'avoid' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Gas</span>
             <span className="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-0.5 rounded-full">{gas.length}</span>

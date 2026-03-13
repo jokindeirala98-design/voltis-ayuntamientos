@@ -9,7 +9,7 @@ export default function FooterSection() {
       <img src={VOLTIS_LOGO} alt="Voltis Energía" className="h-40 object-contain mb-6" />
       <p className="text-lg font-bold text-slate-800 mb-1">VOLTIS SOLUCIONES SL</p>
       <p className="text-sm text-slate-500">Auditoría y Optimización Energética</p>
-      <p className="text-xs text-slate-400 mt-8">© {new Date().getFullYear()} VOLTIS SOLUCIONES SL — Todos los derechos reservados</p>
+
     </div>
   );
 }

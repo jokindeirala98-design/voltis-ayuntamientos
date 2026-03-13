@@ -92,8 +92,15 @@ function EditableCell({ value, onChange, type = 'text', disabled = false, cellId
     committedRef.current = false;
     setDraft(value != null ? String(value) : '');
     setEditing(true);
-    setTimeout(() => inputRef.current?.select(), 10);
   };
+
+  // After editing=true, focus+select the input
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
 
   const commit = () => {
     if (committedRef.current) return;
@@ -113,7 +120,11 @@ function EditableCell({ value, onChange, type = 'text', disabled = false, cellId
         onChange={e => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={e => {
-          if (e.key === 'Enter') { commit(); onEnterNav && onEnterNav(); }
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commit();
+            onEnterNav && onEnterNav();
+          }
           if (e.key === 'Escape') { committedRef.current = true; setEditing(false); }
         }}
         className="w-full h-full px-1.5 py-0.5 text-xs border border-blue-400 outline-none rounded focus:ring-1 ring-blue-300"

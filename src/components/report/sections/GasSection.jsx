@@ -35,7 +35,7 @@ export default function GasSection({ rows, sectionNum }) {
   }));
 
   return (
-    <div style={{ pageBreakBefore: 'always', breakBefore: 'page' }} className="mb-8">
+    <div style={{ pageBreakBefore: 'always', breakBefore: 'page', breakInside: 'avoid' }} className="mb-8">
       <SectionTitle
         number={sectionNum}
         title="Suministros de Gas"

@@ -45,8 +45,17 @@ export function sumPeriods(rows) {
 }
 
 export function getPeriodsForLabel(label) {
-  if (label.includes('6.1')) return ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
+  const upper = (label || '').toUpperCase();
+  if (upper.includes('3.0') || upper.includes('6.1')) return ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
+  // 2.0TD and default: 3 consumption periods only
   return ['P1', 'P2', 'P3'];
+}
+
+// Returns only valid consumption period keys for a given tariff label
+export function getValidConsumoPeriods(label) {
+  const upper = (label || '').toUpperCase();
+  if (upper.includes('3.0') || upper.includes('6.1')) return ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6'];
+  return ['consumo_p1','consumo_p2','consumo_p3'];
 }
 
 export function fmtNum(n) {

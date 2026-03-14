@@ -88,6 +88,7 @@ export default function TarifaDetailSection({ tarifaLabel, rows, sectionNum }) {
               strokeWidth={3}
               stroke="#fff"
               label={OutsideLabel}
+              activeShape={() => null}
             >
               {pieData.map((entry, i) => {
                 const idx = periods.indexOf(entry.name);

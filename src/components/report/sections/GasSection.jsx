@@ -99,6 +99,7 @@ export default function GasSection({ rows, sectionNum }) {
               strokeWidth={3}
               stroke="#fff"
               label={OutsideLabel}
+              activeShape={() => null}
             >
               {pieData.map((_, i) => <Cell key={i} fill={GAS_COLORS[i % GAS_COLORS.length]} />)}
             </Pie>

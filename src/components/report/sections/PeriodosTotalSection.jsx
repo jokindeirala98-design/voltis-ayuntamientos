@@ -114,6 +114,7 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
               strokeWidth={3}
               stroke="#fff"
               label={OutsideLabel}
+              activeShape={() => null}
             >
               {pieData.map((entry, i) => {
                 const idx = ALL_PERIODS.indexOf(entry.name);

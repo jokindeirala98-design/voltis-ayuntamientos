@@ -30,7 +30,7 @@ export default function SuppliesSection({ rows, sectionNum }) {
   const gas = rows.filter(r => r.tipo_suministro === 'Gas');
 
   return (
-    <div className="mb-8" style={{ breakInside: 'avoid-page' }}>
+    <div className="mb-8" style={{ breakInside: 'avoid-page', paddingTop: '18mm' }}>
       <SectionTitle number={sectionNum} title="Relación de Suministros" subtitle={`${rows.length} suministros en total`} />
 
       {electric.length > 0 && (

@@ -129,10 +129,7 @@ function processSheet(data, filename) {
     }
   }
 
-  // Fallback: si tiene columna "consumoanual" y "codigocups" es casi seguro gas
-  if (!isGasSheet && anualCol && nh.some(x => x.norm.includes('codigocups') || x.norm === 'codigocups')) {
-    isGasSheet = true;
-  }
+  // NO hay más fallbacks — solo es gas si contiene valores RL1-RL4
 
   // ── Columna de consumo para gas: prioridad "Consumoanual", luego patrones ──
   let gasConsumoCol = anualCol;

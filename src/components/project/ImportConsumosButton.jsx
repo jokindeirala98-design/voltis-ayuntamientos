@@ -75,15 +75,9 @@ function consumoKeysForType(type) {
   return ['consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6', 'consumo_total'];
 }
 
-// ── Detectar columna por nombre (búsqueda flexible insensible a mayúsculas y espacios) ───
-
-function findColByName(headers, names) {
-  for (const name of names) {
-    const norm = name.toLowerCase().replace(/\s/g, '');
-    const found = headers.find(h => h.trim().toLowerCase().replace(/\s/g, '') === norm);
-    if (found) return found;
-  }
-  return null;
+// ── Normaliza nombre de columna para comparación ─────────────────────────────
+function normHeader(h) {
+  return String(h || '').trim().toLowerCase().replace(/[\s_\-\.]/g, '');
 }
 
 // ── Procesado de un sheet ────────────────────────────────────────────────────
@@ -95,38 +89,69 @@ function processSheet(data, filename) {
   const warnings = [];
   const extracted = [];
 
-  // ── Detectar columnas clave por nombre exacto (flexible) ─────────────────
-  const cupsCol = findColByName(headers, ['CodigoCUPS', 'CUPS', 'CódigoCUPS', 'Codigo CUPS', 'Código CUPS', 'PuntoDeSuministro', 'Punto de suministro']);
-  const tarifaCol = findColByName(headers, ['Tarifa', 'ATR', 'Peaje', 'Tipo de tarifa', 'TipoDeTarifa']);
-  const consumoAnualCol = findColByName(headers, ['Consumoanual', 'Consumo anual', 'ConsumoAnual', 'consumoanual']);
+  // ── Detectar columnas por nombre normalizado ──────────────────────────────
+  const nh = headers.map(h => ({ orig: h, norm: normHeader(h) }));
 
-  // ── Detectar si la hoja es de GAS: si algún valor de Tarifa es RL1-RL4 ───
+  const findH = (...candidates) => {
+    for (const c of candidates) {
+      const cn = normHeader(c);
+      const found = nh.find(x => x.norm === cn);
+      if (found) return found.orig;
+    }
+    // fallback: partial match
+    for (const c of candidates) {
+      const cn = normHeader(c);
+      const found = nh.find(x => x.norm.includes(cn) || cn.includes(x.norm));
+      if (found) return found.orig;
+    }
+    return null;
+  };
+
+  const cupsCol    = findH('codigocups', 'cups', 'codigocups', 'puntosuministro', 'puntodesuministro');
+  const tarifaCol  = findH('tarifa', 'atr', 'peaje', 'tipotarifa', 'tipodetatifa');
+  const anualCol   = findH('consumoanual', 'consumoanual', 'consumoanual', 'kwhanual', 'kwhanuales', 'totalanual');
+
+  // ── Detectar si es hoja GAS: escanear TODOS los valores de todas las filas buscando RL1-RL4 ──
+  const isRL = v => /^RL\s*[1-4]$/i.test(String(v || '').trim());
   let isGasSheet = false;
-  if (tarifaCol) {
-    isGasSheet = data.some(row => /^RL[1-4]$/i.test(String(row[tarifaCol] || '').trim()));
+  let detectedTarifaCol = tarifaCol;
+
+  // Si hay columna tarifa detectada, buscar en ella
+  if (tarifaCol && data.some(row => isRL(row[tarifaCol]))) {
+    isGasSheet = true;
+  }
+  // Si no, escanear TODAS las columnas buscando RL1-RL4
+  if (!isGasSheet) {
+    for (const h of headers) {
+      if (data.some(row => isRL(row[h]))) {
+        isGasSheet = true;
+        detectedTarifaCol = h;
+        break;
+      }
+    }
   }
 
-  // ── Construir colMap para electricidad (solo si no es gas) ────────────────
-  const colMap = isGasSheet ? null : buildColMap(headers);
-
-  // ── Encontrar columna de consumo para gas ─────────────────────────────────
-  // Si no se encontró por nombre exacto, buscar por patrón en headers
-  let gasConsumoCol = consumoAnualCol;
+  // ── Columna de consumo para gas: prioridad "Consumoanual", luego patrones ──
+  let gasConsumoCol = anualCol;
   if (isGasSheet && !gasConsumoCol) {
-    gasConsumoCol = headers.find(h => /anual/i.test(h)) ||
-                    headers.find(h => /consumo/i.test(h) && !/cups|codigo/i.test(h)) ||
-                    headers.find(h => /kwh/i.test(h));
+    // buscar cualquier header que contenga "anual"
+    gasConsumoCol = nh.find(x => x.norm.includes('anual'))?.orig || null;
+  }
+  if (isGasSheet && !gasConsumoCol) {
+    // buscar cualquier header que contenga "consumo" y no sea cups/codigo
+    gasConsumoCol = nh.find(x => x.norm.includes('consumo') && !x.norm.includes('cups') && !x.norm.includes('codigo'))?.orig || null;
   }
 
   if (isGasSheet && !gasConsumoCol) {
     warnings.push(`${filename}: hoja de gas detectada pero no se encontró columna de consumo anual`);
   }
 
+  // ── colMap para electricidad ──────────────────────────────────────────────
+  const colMap = isGasSheet ? null : buildColMap(headers);
+
   data.forEach((row, i) => {
     // --- Detectar CUPS ---
     let rawCups = cupsCol ? row[cupsCol] : null;
-
-    // Si no hay columna CUPS, escanear todos los valores
     if (!rawCups) {
       for (const v of Object.values(row)) {
         const nc = normalizeCups(v);
@@ -137,15 +162,10 @@ function processSheet(data, filename) {
     const cups = normalizeCups(rawCups);
     if (!cups || !isValidCups(cups)) return;
 
-    const tarifaRaw = tarifaCol ? String(row[tarifaCol] || '').trim() : '';
+    const tarifaRaw = detectedTarifaCol ? String(row[detectedTarifaCol] || '').trim() : '';
 
     if (isGasSheet) {
-      // ── RUTA GAS: solo consumo total ─────────────────────────────────────
-      if (!tarifaRaw) {
-        warnings.push(`Fila ${i + 2} (${cups}): tarifa vacía — fila omitida`);
-        return;
-      }
-
+      // ── RUTA GAS: solo consumo_total desde columna anual ─────────────────
       let total = gasConsumoCol ? parseNum(row[gasConsumoCol]) : null;
 
       if (total === null || total === 0) {
@@ -189,7 +209,6 @@ function processSheet(data, filename) {
         return;
       }
 
-      // Auto-recalc consumo_total
       if (tipoTarifa === 'elec_3p') {
         const t = (consumos.consumo_p1 || 0) + (consumos.consumo_p2 || 0) + (consumos.consumo_p3 || 0);
         if (t > 0) consumos.consumo_total = Math.round(t * 1000) / 1000;

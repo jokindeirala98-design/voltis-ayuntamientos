@@ -86,12 +86,12 @@ export default function GasSection({ rows, sectionNum }) {
       {/* Donut chart */}
       <div style={{ breakInside: 'avoid' }}>
         <p style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 16, textAlign: 'center' }}>Distribución por tarifa RL</p>
-        <ResponsiveContainer width="100%" height={320}>
-          <PieChart>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <PieChart width={640} height={320}>
             <Pie
               data={pieData}
-              cx="50%"
-              cy="50%"
+              cx={320}
+              cy={140}
               innerRadius={65}
               outerRadius={110}
               dataKey="value"
@@ -105,7 +105,7 @@ export default function GasSection({ rows, sectionNum }) {
             </Pie>
             <Legend iconSize={10} iconType="circle" />
           </PieChart>
-        </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

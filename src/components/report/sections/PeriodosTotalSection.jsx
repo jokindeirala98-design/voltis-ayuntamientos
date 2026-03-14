@@ -101,12 +101,12 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
       {/* Donut chart */}
       <div className="mb-8" style={{ breakInside: 'avoid' }}>
         <p style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 16, textAlign: 'center' }}>Distribución porcentual por periodo</p>
-        <ResponsiveContainer width="100%" height={320}>
-          <PieChart>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <PieChart width={640} height={320}>
             <Pie
               data={pieData}
-              cx="50%"
-              cy="50%"
+              cx={320}
+              cy={140}
               innerRadius={65}
               outerRadius={110}
               dataKey="value"
@@ -123,7 +123,7 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
             </Pie>
             <Legend iconSize={10} iconType="circle" formatter={(name) => `${name} — ${PERIOD_NAMES[name] || ''}`} />
           </PieChart>
-        </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Bar chart */}
@@ -131,8 +131,8 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
         <p style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 16, textAlign: 'center' }}>
           Consumo por periodo (kWh){has20 ? ' — Tono claro: fracción 2.0TD' : ''}
         </p>
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={barData} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <BarChart width={640} height={280} data={barData} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
             <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} tickFormatter={v => v >= 1000 ? `${Math.round(v / 1000)}k` : v} width={55} axisLine={false} tickLine={false} />
@@ -156,7 +156,7 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
               </Bar>
             )}
           </BarChart>
-        </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

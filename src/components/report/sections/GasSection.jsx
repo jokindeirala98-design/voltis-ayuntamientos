@@ -43,16 +43,14 @@ export default function GasSection({ rows, sectionNum }) {
       />
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-orange-200 shadow-sm mb-8" style={{ breakInside: 'avoid' }}>
-        <table className="w-full text-sm">
+      <div className="overflow-hidden rounded-2xl mb-8" style={{ breakInside: 'avoid', border: '1px solid #E2E8F0' }}>
+        <table className="w-full" style={{ fontSize: 13 }}>
           <thead>
-            <tr style={{ backgroundColor: '#9a3412', color: 'white', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-              <th className="text-left px-5 py-3 font-semibold">Tarifa RL</th>
-              <th className="text-right px-5 py-3 font-semibold">Nº Suministros</th>
-              <th className="text-right px-5 py-3 font-semibold">Consumo (kWh)</th>
-              <th className="text-right p-0 font-semibold" style={{ minWidth: 120 }}>
-                <span className="block w-full px-4 py-3 text-right">% Total Gas</span>
-              </th>
+            <tr style={{ backgroundColor: '#F1F5F9', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+              <th className="text-left px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tarifa RL</th>
+              <th className="text-right px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Nº Suministros</th>
+              <th className="text-right px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Consumo (kWh)</th>
+              <th className="text-right px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', minWidth: 120 }}>% Total Gas</th>
             </tr>
           </thead>
           <tbody>
@@ -60,48 +58,52 @@ export default function GasSection({ rows, sectionNum }) {
               const grp = groups[rl];
               const grpTotal = grp.reduce((s, r) => s + (Number(r.consumo_total) || 0), 0);
               return (
-                <tr key={rl} className={i % 2 === 0 ? 'bg-white' : 'bg-orange-50/30'}>
-                  <td className="px-5 py-2.5 font-bold" style={{ color: GAS_COLORS[i % GAS_COLORS.length] }}>{rl}</td>
-                  <td className="px-5 py-2.5 text-right">{grp.length}</td>
-                  <td className="px-5 py-2.5 text-right font-mono">{fmtNum(grpTotal)}</td>
-                  <td className="p-0">
-                    <span className={pctBadgeClass(grpTotal, totalGas)}>{fmtPct(grpTotal, totalGas)}</span>
+                <tr key={rl} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#F8FAFC', borderTop: '1px solid #F1F5F9' }}>
+                  <td className="px-5 py-3">
+                    <span className="inline-flex items-center gap-2.5">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: GAS_COLORS[i % GAS_COLORS.length] }} />
+                      <span style={{ fontWeight: 700, color: GAS_COLORS[i % GAS_COLORS.length] }}>{rl}</span>
+                    </span>
                   </td>
+                  <td className="px-5 py-3 text-right" style={{ color: '#0F172A' }}>{grp.length}</td>
+                  <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>{fmtNum(grpTotal)}</td>
+                  <td className="px-5 py-3 text-right" style={{ color: '#475569', fontWeight: 500 }}>{fmtPct(grpTotal, totalGas)}</td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
-            <tr className="bg-orange-50 border-t-2 border-orange-200 font-semibold">
-              <td className="px-5 py-2.5 text-orange-900">TOTAL GAS</td>
-              <td className="px-5 py-2.5 text-right text-orange-900">{rows.length}</td>
-              <td className="px-5 py-2.5 text-right font-mono text-orange-900">{fmtNum(totalGas)}</td>
-              <td className="px-5 py-2.5 text-right text-orange-900">100,0 %</td>
+            <tr style={{ backgroundColor: '#ECFDF5', borderTop: '2px solid #A7F3D0', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+              <td className="px-5 py-3" style={{ fontWeight: 700, color: '#059669' }}>TOTAL GAS</td>
+              <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#059669' }}>{rows.length}</td>
+              <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#059669', fontVariantNumeric: 'tabular-nums' }}>{fmtNum(totalGas)}</td>
+              <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#059669' }}>100,0 %</td>
             </tr>
           </tfoot>
         </table>
       </div>
 
-      {/* Pie chart */}
+      {/* Donut chart */}
       <div style={{ breakInside: 'avoid' }}>
-        <p className="text-sm font-semibold text-slate-600 mb-4 text-center">Distribución por tarifa RL</p>
+        <p style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 16, textAlign: 'center' }}>Distribución por tarifa RL</p>
         <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <Pie
               data={pieData}
               cx="50%"
               cy="50%"
+              innerRadius={65}
               outerRadius={110}
               dataKey="value"
               labelLine={true}
-              strokeWidth={2}
+              strokeWidth={3}
               stroke="#fff"
               label={OutsideLabel}
             >
               {pieData.map((_, i) => <Cell key={i} fill={GAS_COLORS[i % GAS_COLORS.length]} />)}
             </Pie>
-            <Tooltip formatter={(v, name) => [`${fmtNum(v)} kWh`, name]} />
-            <Legend iconSize={12} iconType="square" />
+            <Tooltip formatter={(v, name) => [`${fmtNum(v)} kWh`, name]} contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E2E8F0' }} />
+            <Legend iconSize={10} iconType="circle" />
           </PieChart>
         </ResponsiveContainer>
       </div>

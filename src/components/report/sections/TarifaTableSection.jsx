@@ -16,16 +16,14 @@ export default function TarifaTableSection({ rows, sectionNum }) {
   return (
     <div className="mb-8" style={{ breakInside: 'avoid' }}>
       <SectionTitle number={sectionNum} title="Resumen por Tarifa" subtitle="Distribución de suministros y consumos agrupados por tipo tarifario" />
-      <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-        <table className="w-full text-sm">
+      <div className="overflow-hidden rounded-2xl" style={{ border: '1px solid #E2E8F0' }}>
+        <table className="w-full" style={{ fontSize: 13 }}>
           <thead>
-            <tr style={{ backgroundColor: '#1e3a8a', color: 'white', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-              <th className="text-left px-5 py-3 font-semibold">Tarifa</th>
-              <th className="text-right px-5 py-3 font-semibold">Nº Suministros</th>
-              <th className="text-right px-5 py-3 font-semibold">Consumo Total (kWh)</th>
-              <th className="text-right p-0 font-semibold" style={{ minWidth: 120 }}>
-                <span className="block w-full px-4 py-3 text-right">% del Total</span>
-              </th>
+            <tr style={{ backgroundColor: '#F1F5F9', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+              <th className="text-left px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tarifa</th>
+              <th className="text-right px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Nº Suministros</th>
+              <th className="text-right px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Consumo Total (kWh)</th>
+              <th className="text-right px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', minWidth: 120 }}>% del Total</th>
             </tr>
           </thead>
           <tbody>
@@ -33,23 +31,21 @@ export default function TarifaTableSection({ rows, sectionNum }) {
               const grpRows = groups[tarifa];
               const grpTotal = grpRows.reduce((s, r) => s + (Number(r.consumo_total) || 0), 0);
               return (
-                <tr key={tarifa} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                  <td className="px-5 py-3 font-bold text-blue-900">{tarifa}</td>
-                  <td className="px-5 py-3 text-right text-slate-700">{grpRows.length}</td>
-                  <td className="px-5 py-3 text-right font-mono text-slate-800">{fmtNum(grpTotal)}</td>
-                  <td className="p-0">
-                    <span className={pctBadgeClass(grpTotal, total)}>{fmtPct(grpTotal, total)}</span>
-                  </td>
+                <tr key={tarifa} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#F8FAFC', borderTop: '1px solid #F1F5F9' }}>
+                  <td className="px-5 py-3" style={{ fontWeight: 700, color: '#1D4ED8' }}>{tarifa}</td>
+                  <td className="px-5 py-3 text-right" style={{ color: '#475569' }}>{grpRows.length}</td>
+                  <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>{fmtNum(grpTotal)}</td>
+                  <td className="px-5 py-3 text-right" style={{ color: '#475569', fontWeight: 500 }}>{fmtPct(grpTotal, total)}</td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
-            <tr className="bg-blue-50 border-t-2 border-blue-200 font-semibold">
-              <td className="px-5 py-3 text-blue-900">TOTAL</td>
-              <td className="px-5 py-3 text-right text-blue-900">{rows.length}</td>
-              <td className="px-5 py-3 text-right font-mono text-blue-900">{fmtNum(total)}</td>
-              <td className="px-5 py-3 text-right text-blue-900">100,0 %</td>
+            <tr style={{ backgroundColor: '#EFF6FF', borderTop: '2px solid #BFDBFE', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+              <td className="px-5 py-3" style={{ fontWeight: 700, color: '#1D4ED8' }}>TOTAL</td>
+              <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#1D4ED8' }}>{rows.length}</td>
+              <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#1D4ED8', fontVariantNumeric: 'tabular-nums' }}>{fmtNum(total)}</td>
+              <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#1D4ED8' }}>100,0 %</td>
             </tr>
           </tfoot>
         </table>

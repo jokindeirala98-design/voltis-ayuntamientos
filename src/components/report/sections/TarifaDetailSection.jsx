@@ -35,60 +35,57 @@ export default function TarifaDetailSection({ tarifaLabel, rows, sectionNum }) {
       />
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm mb-8" style={{ breakInside: 'avoid' }}>
-        <table className="w-full text-sm">
+      <div className="overflow-hidden rounded-2xl mb-8" style={{ breakInside: 'avoid', border: '1px solid #E2E8F0' }}>
+        <table className="w-full" style={{ fontSize: 13 }}>
           <thead>
-            <tr style={{ backgroundColor: '#1e3a8a', color: 'white', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-              <th className="text-left px-5 py-3">Periodo</th>
-              <th className="text-right px-5 py-3">Consumo (kWh)</th>
-              <th className="text-right p-0 font-semibold" style={{ minWidth: 130 }}>
-                <span className="block w-full px-4 py-3 text-right">% sobre Total {tarifaLabel}</span>
-              </th>
+            <tr style={{ backgroundColor: '#F1F5F9', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+              <th className="text-left px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Periodo</th>
+              <th className="text-right px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Consumo (kWh)</th>
+              <th className="text-right px-5 py-3" style={{ color: '#475569', fontWeight: 600, fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', minWidth: 130 }}>% sobre Total {tarifaLabel}</th>
             </tr>
           </thead>
           <tbody>
             {periods.map((p, i) => {
               const val = sums[p.toLowerCase()] || 0;
               return (
-                <tr key={p} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                  <td className="px-5 py-2.5">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="w-3 h-3 rounded shrink-0" style={{ backgroundColor: PERIOD_COLORS[i] }} />
-                      <span className="font-semibold">{p}</span>
-                      <span className="text-slate-400 text-xs">· {PERIOD_NAMES[p]}</span>
+                <tr key={p} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#F8FAFC', borderTop: '1px solid #F1F5F9' }}>
+                  <td className="px-5 py-3">
+                    <span className="inline-flex items-center gap-2.5">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PERIOD_COLORS[i] }} />
+                      <span style={{ fontWeight: 700, color: '#0F172A' }}>{p}</span>
+                      <span style={{ fontSize: 12, color: '#94A3B8' }}>{PERIOD_NAMES[p]}</span>
                     </span>
                   </td>
-                  <td className="px-5 py-2.5 text-right font-mono">{val > 0 ? fmtNum(val) : '—'}</td>
-                  <td className="p-0">
-                    <span className={pctBadgeClass(val, periodTotal)}>{val > 0 ? fmtPct(val, periodTotal) : '—'}</span>
-                  </td>
+                  <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>{val > 0 ? fmtNum(val) : '—'}</td>
+                  <td className="px-5 py-3 text-right" style={{ color: '#475569', fontWeight: 500 }}>{val > 0 ? fmtPct(val, periodTotal) : '—'}</td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
-            <tr className="bg-blue-50 border-t-2 border-blue-200 font-semibold">
-              <td className="px-5 py-2.5 text-blue-900">TOTAL</td>
-              <td className="px-5 py-2.5 text-right font-mono text-blue-900">{fmtNum(periodTotal)}</td>
-              <td className="px-5 py-2.5 text-right text-blue-900">100,0 %</td>
+            <tr style={{ backgroundColor: '#EFF6FF', borderTop: '2px solid #BFDBFE', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+              <td className="px-5 py-3" style={{ fontWeight: 700, color: '#1D4ED8' }}>TOTAL</td>
+              <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#1D4ED8', fontVariantNumeric: 'tabular-nums' }}>{fmtNum(periodTotal)}</td>
+              <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#1D4ED8' }}>100,0 %</td>
             </tr>
           </tfoot>
         </table>
       </div>
 
-      {/* Pie chart */}
+      {/* Donut chart */}
       <div style={{ breakInside: 'avoid' }}>
-        <p className="text-sm font-semibold text-slate-600 mb-4 text-center">Distribución porcentual</p>
+        <p style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 16, textAlign: 'center' }}>Distribución porcentual</p>
         <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <Pie
               data={pieData}
               cx="50%"
               cy="50%"
+              innerRadius={65}
               outerRadius={110}
               dataKey="value"
               labelLine={true}
-              strokeWidth={2}
+              strokeWidth={3}
               stroke="#fff"
               label={OutsideLabel}
             >
@@ -97,8 +94,8 @@ export default function TarifaDetailSection({ tarifaLabel, rows, sectionNum }) {
                 return <Cell key={i} fill={PERIOD_COLORS[idx >= 0 ? idx : i]} />;
               })}
             </Pie>
-            <Tooltip formatter={(v, name) => [`${fmtNum(v)} kWh`, `${name} — ${PERIOD_NAMES[name] || ''}`]} />
-            <Legend iconSize={12} iconType="square" formatter={(name) => `${name} — ${PERIOD_NAMES[name] || ''}`} />
+            <Tooltip formatter={(v, name) => [`${fmtNum(v)} kWh`, `${name} — ${PERIOD_NAMES[name] || ''}`]} contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E2E8F0' }} />
+            <Legend iconSize={10} iconType="circle" formatter={(name) => `${name} — ${PERIOD_NAMES[name] || ''}`} />
           </PieChart>
         </ResponsiveContainer>
       </div>

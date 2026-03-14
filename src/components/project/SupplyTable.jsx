@@ -442,8 +442,14 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
     });
   }
 
-  // Sync filteredRef after computing
+  // Sync filteredRef after computing + notify parent
   filteredRef.current = filtered;
+
+  // Notify parent with current visible rows (filtered + sorted)
+  useEffect(() => {
+    if (onFilteredRowsChange) onFilteredRowsChange(filtered);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered.length, sortKey, sortDir, filter, statusFilter]);
 
   const SortIcon = ({ k }) => {
     if (sortKey !== k) return <ChevronsUpDown className="w-3 h-3 opacity-30" />;

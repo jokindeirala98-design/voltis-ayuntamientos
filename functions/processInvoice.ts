@@ -100,10 +100,12 @@ PRIORIDAD 3 — Si no tienes potencias ni tarifa explícita, devuelve null. tari
 DETECCIÓN DE DISCREPANCIA: Si la tarifa de la factura y la que sugieren las potencias son diferentes, indica tarifa_discrepancia = true y detalla en tarifa_notes.
 
 ==================================================
-EXTRACCIÓN DE POTENCIAS Y CONSUMOS
+EXTRACCIÓN DE POTENCIAS
 ==================================================
-Tarifa 2.0TD: solo P1 y P2 de potencia; solo P1, P2, P3 de consumo. Devuelve null en los demás.
-Tarifa 3.0TD / 6.1TD: P1-P6 para potencia y consumo.
+Extrae ÚNICAMENTE las potencias contratadas (kW). NO extraigas consumos energéticos (kWh).
+Los consumos serán aportados por separado mediante Excel y NO deben extraerse de la factura.
+Tarifa 2.0TD: solo P1 y P2 de potencia. Devuelve null en potencia_p3 a potencia_p6.
+Tarifa 3.0TD / 6.1TD: P1-P6 para potencia.
 
 ==================================================
 RESTO DE CAMPOS
@@ -121,8 +123,8 @@ Devuelve JSON con esta estructura:
   "tipo_suministro": "Electricidad"|"Gas"|null, "tipo_suministro_confidence": "alta"|"media"|"baja", "tipo_suministro_notes": string|null,
   "potencia_p1": number|null, "potencia_p2": number|null, "potencia_p3": number|null, "potencia_p4": number|null, "potencia_p5": number|null, "potencia_p6": number|null,
   "potencias_confidence": "alta"|"media"|"baja", "potencias_notes": string|null,
-  "consumo_p1": number|null, "consumo_p2": number|null, "consumo_p3": number|null, "consumo_p4": number|null, "consumo_p5": number|null, "consumo_p6": number|null,
-  "consumo_total": number|null, "consumos_confidence": "alta"|"media"|"baja", "consumos_notes": string|null,
+  "consumo_p1": null, "consumo_p2": null, "consumo_p3": null, "consumo_p4": null, "consumo_p5": null, "consumo_p6": null,
+  "consumo_total": null, "consumos_confidence": "alta"|"media"|"baja", "consumos_notes": "Consumos no extraídos de factura",
   "validation_summary": string
 }`;
 
@@ -193,12 +195,14 @@ Devuelve JSON con esta estructura:
     // ── Apply tariff period rules ─────────────────────────────────────────────
     const tariffWarnings = applyTariffRules(extractedData.tarifa, extractedData);
 
-    // ── Auto-calculate consumo_total ──────────────────────────────────────────
-    if (!extractedData.consumo_total) {
-      const total = ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6']
-        .reduce((s, k) => s + (extractedData[k] || 0), 0);
-      if (total > 0) extractedData.consumo_total = Math.round(total * 1000) / 1000;
-    }
+    // ── Consumos siempre a null (se rellenan desde Excel) ────────────────────
+    extractedData.consumo_p1 = null;
+    extractedData.consumo_p2 = null;
+    extractedData.consumo_p3 = null;
+    extractedData.consumo_p4 = null;
+    extractedData.consumo_p5 = null;
+    extractedData.consumo_p6 = null;
+    extractedData.consumo_total = null;
 
     // ── Build observations & validation status ────────────────────────────────
     const observations = [];

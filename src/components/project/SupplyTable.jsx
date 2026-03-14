@@ -594,12 +594,14 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
                         title={cellTitle}
                       >
                         <EditableCell
-                          value={row[col.key]}
-                          type={col.type || 'text'}
-                          disabled={isCellDisabled(row, col.key)}
-                          onChange={val => handleCellChange(row, col.key, val)}
-                          cellId={`${row.id}_${col.key}`}
-                          onEnterNav={CONSUMO_NAV_COLS.includes(col.key) ? () => handleEnterNav(row.id, col.key, filtered) : undefined}
+                         value={row[col.key]}
+                         type={col.type || 'text'}
+                         disabled={isCellDisabled(row, col.key)}
+                         onChange={val => handleCellChange(row, col.key, val)}
+                         cellId={`${row.id}_${col.key}`}
+                         onEnterNav={CONSUMO_NAV_COLS.includes(col.key) ? () => handleEnterNav(row.id, col.key, filtered) : undefined}
+                         onActivate={() => setActiveCell({ rowId: row.id, colKey: col.key })}
+                         isHighlighted={highlightedCells.has(`${row.id}_${col.key}`)}
                         />
                       </td>
                     );

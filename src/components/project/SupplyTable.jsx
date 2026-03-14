@@ -152,7 +152,7 @@ function EditableCell({ value, onChange, type = 'text', disabled = false, cellId
   );
 }
 
-export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded, onRowUpdated, onViewDetail }) {
+export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded, onRowUpdated, onViewDetail, onFilteredRowsChange }) {
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
   const [filter, setFilter] = useState('');

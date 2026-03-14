@@ -157,7 +157,11 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [savingRows, setSavingRows] = useState(new Set());
   const [savedRows, setSavedRows] = useState(new Set());
+  const [activeCell, setActiveCell] = useState(null); // { rowId, colKey }
+  const [pasteMessage, setPasteMessage] = useState(null); // { text, type }
+  const [highlightedCells, setHighlightedCells] = useState(new Set()); // "rowId_colKey"
   const tableRef = useRef(null);
+  const activeCellRef = useRef(null); // keep in sync with activeCell for paste handler
 
   const queryClient = useQueryClient();
   const debounceTimers = useRef({});

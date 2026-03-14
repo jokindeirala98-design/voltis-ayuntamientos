@@ -249,7 +249,7 @@ export default function ImportConsumosButton({ rows, onUpdated }) {
         }
       }
 
-      matches.push({ cups, supply, consumos: entries[0].consumos, tarifa: entries[0].tarifa });
+      matches.push({ cups, supply, consumos: entries[0].consumos, tarifa: entries[0].tarifa, tipoTarifa: entries[0].tipoTarifa });
     }
 
     setPreview({ matches, conflicts, notFound, warnings: globalWarnings });

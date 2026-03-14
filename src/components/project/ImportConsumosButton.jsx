@@ -75,25 +75,58 @@ function consumoKeysForType(type) {
   return ['consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6', 'consumo_total'];
 }
 
+// ── Detectar columna por nombre (búsqueda flexible insensible a mayúsculas y espacios) ───
+
+function findColByName(headers, names) {
+  for (const name of names) {
+    const norm = name.toLowerCase().replace(/\s/g, '');
+    const found = headers.find(h => h.trim().toLowerCase().replace(/\s/g, '') === norm);
+    if (found) return found;
+  }
+  return null;
+}
+
 // ── Procesado de un sheet ────────────────────────────────────────────────────
 
 function processSheet(data, filename) {
   if (!data.length) return { rows: [], warnings: [`${filename}: hoja vacía`] };
 
   const headers = Object.keys(data[0]);
-  const colMap = buildColMap(headers);
   const warnings = [];
   const extracted = [];
 
-  if (!colMap._cups) {
-    warnings.push(`${filename}: no se encontró columna CUPS — se intentará buscar valores CUPS en todas las columnas`);
+  // ── Detectar columnas clave por nombre exacto (flexible) ─────────────────
+  const cupsCol = findColByName(headers, ['CodigoCUPS', 'CUPS', 'CódigoCUPS', 'Codigo CUPS', 'Código CUPS', 'PuntoDeSuministro', 'Punto de suministro']);
+  const tarifaCol = findColByName(headers, ['Tarifa', 'ATR', 'Peaje', 'Tipo de tarifa', 'TipoDeTarifa']);
+  const consumoAnualCol = findColByName(headers, ['Consumoanual', 'Consumo anual', 'ConsumoAnual', 'consumoanual']);
+
+  // ── Detectar si la hoja es de GAS: si algún valor de Tarifa es RL1-RL4 ───
+  let isGasSheet = false;
+  if (tarifaCol) {
+    isGasSheet = data.some(row => /^RL[1-4]$/i.test(String(row[tarifaCol] || '').trim()));
+  }
+
+  // ── Construir colMap para electricidad (solo si no es gas) ────────────────
+  const colMap = isGasSheet ? null : buildColMap(headers);
+
+  // ── Encontrar columna de consumo para gas ─────────────────────────────────
+  // Si no se encontró por nombre exacto, buscar por patrón en headers
+  let gasConsumoCol = consumoAnualCol;
+  if (isGasSheet && !gasConsumoCol) {
+    gasConsumoCol = headers.find(h => /anual/i.test(h)) ||
+                    headers.find(h => /consumo/i.test(h) && !/cups|codigo/i.test(h)) ||
+                    headers.find(h => /kwh/i.test(h));
+  }
+
+  if (isGasSheet && !gasConsumoCol) {
+    warnings.push(`${filename}: hoja de gas detectada pero no se encontró columna de consumo anual`);
   }
 
   data.forEach((row, i) => {
-    // --- Detect CUPS ---
-    let rawCups = colMap._cups ? row[colMap._cups] : null;
+    // --- Detectar CUPS ---
+    let rawCups = cupsCol ? row[cupsCol] : null;
 
-    // If no CUPS col, scan all values for something that looks like a CUPS
+    // Si no hay columna CUPS, escanear todos los valores
     if (!rawCups) {
       for (const v of Object.values(row)) {
         const nc = normalizeCups(v);
@@ -102,60 +135,47 @@ function processSheet(data, filename) {
     }
 
     const cups = normalizeCups(rawCups);
-    if (!cups || !isValidCups(cups)) return; // skip rows without valid CUPS
+    if (!cups || !isValidCups(cups)) return;
 
-    // --- Detect tarifa ---
-    const tarifaRaw = colMap._tarifa ? row[colMap._tarifa] : '';
-    let tipoTarifa = classifyTarifa(tarifaRaw);
+    const tarifaRaw = tarifaCol ? String(row[tarifaCol] || '').trim() : '';
 
-    // If tarifa not found in dedicated col, try all cols for RL/2.0/3.0/6.1 patterns
-    if (!tipoTarifa) {
-      for (const v of Object.values(row)) {
-        const t = classifyTarifa(v);
-        if (t) { tipoTarifa = t; break; }
+    if (isGasSheet) {
+      // ── RUTA GAS: solo consumo total ─────────────────────────────────────
+      if (!tarifaRaw) {
+        warnings.push(`Fila ${i + 2} (${cups}): tarifa vacía — fila omitida`);
+        return;
       }
-    }
 
-    // If still no tarifa detected, try to infer from supply table row (if CUPS exists there)
-    if (!tipoTarifa) {
-      // Will fallback to extracting all available: consumo_total first, then periods
-      tipoTarifa = null;
-    }
+      let total = gasConsumoCol ? parseNum(row[gasConsumoCol]) : null;
 
-    // --- Extract consumos ---
-    const consumos = {};
+      if (total === null || total === 0) {
+        warnings.push(`Fila ${i + 2} (${cups}): no se encontró consumo anual — fila omitida`);
+        return;
+      }
 
-    if (tipoTarifa === 'gas') {
-      // For gas: only consumo_total. Try colMap first, then scan all headers for numeric value
-      let total = null;
-      if (colMap['consumo_total']) {
-        total = parseNum(row[colMap['consumo_total']]);
-      }
-      // Fallback: scan all headers for "anual", "consumo", "kwh" and pick first numeric
-      if (total === null) {
-        for (const h of headers) {
-          if (/anual|consumo|kwh/i.test(h)) {
-            const n = parseNum(row[h]);
-            if (n !== null && n > 0) { total = n; break; }
-          }
-        }
-      }
-      // Last resort: pick the largest positive number in the row (excluding known ID/code cols)
-      if (total === null) {
-        let maxVal = null;
-        for (const h of headers) {
-          if (/cups|codigo|tarifa|descripci|nombre|direccion|municipio|provincia|cif|nif/i.test(h)) continue;
-          const n = parseNum(row[h]);
-          if (n !== null && n > 0 && (maxVal === null || n > maxVal)) maxVal = n;
-        }
-        if (maxVal !== null) total = maxVal;
-      }
-      if (total !== null) consumos.consumo_total = total;
+      extracted.push({
+        cups,
+        tarifa: tarifaRaw,
+        tipoTarifa: 'gas',
+        consumos: { consumo_total: total },
+        source: filename
+      });
+
     } else {
-      // Electricity or unknown: use colMap
+      // ── RUTA ELECTRICIDAD: buscar periodos ───────────────────────────────
+      let tipoTarifa = classifyTarifa(tarifaRaw);
+      if (!tipoTarifa) {
+        for (const v of Object.values(row)) {
+          const t = classifyTarifa(v);
+          if (t) { tipoTarifa = t; break; }
+        }
+      }
+
+      const consumos = {};
       const allowedKeys = tipoTarifa
         ? consumoKeysForType(tipoTarifa)
         : ['consumo_total', 'consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6'];
+
       for (const key of allowedKeys) {
         const col = colMap[key];
         if (col && row[col] !== null && row[col] !== undefined && row[col] !== '') {
@@ -163,30 +183,24 @@ function processSheet(data, filename) {
           if (num !== null) consumos[key] = num;
         }
       }
-      // If unknown tarifa but has consumo_total, treat as gas-like (clear periods)
-      if (!tipoTarifa && consumos.consumo_total) {
-        for (const k of ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6']) {
-          delete consumos[k];
-        }
+
+      if (Object.keys(consumos).length === 0) {
+        warnings.push(`Fila ${i + 2} (${cups}): no se encontraron consumos — fila omitida`);
+        return;
       }
-    }
 
-    if (Object.keys(consumos).length === 0) {
-      warnings.push(`Fila ${i + 2} (${cups}): no se encontraron consumos — fila omitida`);
-      return;
-    }
+      // Auto-recalc consumo_total
+      if (tipoTarifa === 'elec_3p') {
+        const t = (consumos.consumo_p1 || 0) + (consumos.consumo_p2 || 0) + (consumos.consumo_p3 || 0);
+        if (t > 0) consumos.consumo_total = Math.round(t * 1000) / 1000;
+      } else if (tipoTarifa === 'elec_6p') {
+        const t = ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6']
+          .reduce((s, k) => s + (consumos[k] || 0), 0);
+        if (t > 0) consumos.consumo_total = Math.round(t * 1000) / 1000;
+      }
 
-    // Auto-recalc consumo_total for electricity
-    if (tipoTarifa === 'elec_3p') {
-      const t = (consumos.consumo_p1 || 0) + (consumos.consumo_p2 || 0) + (consumos.consumo_p3 || 0);
-      if (t > 0) consumos.consumo_total = Math.round(t * 1000) / 1000;
-    } else if (tipoTarifa === 'elec_6p') {
-      const t = ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6']
-        .reduce((s, k) => s + (consumos[k] || 0), 0);
-      if (t > 0) consumos.consumo_total = Math.round(t * 1000) / 1000;
+      extracted.push({ cups, tarifa: tarifaRaw, tipoTarifa, consumos, source: filename });
     }
-
-    extracted.push({ cups, tarifa: tarifaRaw, tipoTarifa, consumos, source: filename });
   });
 
   return { rows: extracted, warnings };

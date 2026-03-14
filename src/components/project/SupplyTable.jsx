@@ -95,6 +95,7 @@ function EditableCell({ value, onChange, type = 'text', disabled = false, cellId
     committedRef.current = false;
     setDraft(value != null ? String(value) : '');
     setEditing(true);
+    if (onActivate) onActivate();
   };
 
   // After editing=true, focus+select the input

@@ -21,8 +21,8 @@ export default function GasSection({ rows, sectionNum }) {
 
   const groups = {};
   rows.forEach(r => {
-    const match = (r.tarifa || '').match(/RL[1-4]/i);
-    const rl = match ? match[0].toUpperCase() : 'Sin RL';
+    const match = (r.tarifa || '').match(/RL[\s.]*([1-4])/i);
+    const rl = match ? `RL${match[1]}` : 'Sin RL';
     if (!groups[rl]) groups[rl] = [];
     groups[rl].push(r);
   });

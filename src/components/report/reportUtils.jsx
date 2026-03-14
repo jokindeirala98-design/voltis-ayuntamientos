@@ -108,7 +108,6 @@ export const PERIOD_NAMES = {
 
 /**
  * Returns Tailwind classes for a full-cell % indicator.
- * <td className="p-0"><span className={pctBadgeClass(...)}>{fmtPct(...)}</span></td>
  */
 export function pctBadgeClass(n, total) {
   if (!total || !n || isNaN(n) || Number(n) === 0) {
@@ -118,4 +117,16 @@ export function pctBadgeClass(n, total) {
   if (pct >= 40) return 'block w-full px-4 py-2.5 text-xs font-bold text-right bg-red-500 text-white';
   if (pct >= 20) return 'block w-full px-4 py-2.5 text-xs font-bold text-right bg-amber-400 text-amber-900';
   return 'block w-full px-4 py-2.5 text-xs font-bold text-right bg-emerald-500 text-white';
+}
+
+/**
+ * Returns an inline color string for the % number based on its share of total.
+ * >=40% → red, >=20% → amber, <20% → green
+ */
+export function pctColor(n, total) {
+  if (!total || !n || isNaN(n) || Number(n) === 0) return '#94A3B8';
+  const pct = (n / total) * 100;
+  if (pct >= 40) return '#DC2626'; // red-600
+  if (pct >= 20) return '#D97706'; // amber-600
+  return '#059669'; // emerald-600
 }

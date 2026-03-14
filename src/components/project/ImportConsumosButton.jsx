@@ -423,10 +423,14 @@ export default function ImportConsumosButton({ rows, onUpdated }) {
 
                   <div className="bg-slate-50 rounded-lg p-3 space-y-1.5">
                     <p className="text-xs font-medium text-slate-500 mb-2 flex items-center gap-1"><Info className="w-3 h-3" /> Formato esperado</p>
+                    <p className="text-xs text-slate-600 font-medium mt-1">Electricidad:</p>
                     <p className="text-xs text-slate-500">• Columna <strong>CUPS</strong> (o "Código CUPS", "Punto de suministro")</p>
-                    <p className="text-xs text-slate-500">• Columna <strong>Tarifa</strong> o ATR (ej: 2.0TD, 3.0TD, RL1…)</p>
+                    <p className="text-xs text-slate-500">• Columna <strong>Tarifa</strong> (ej: 2.0TD, 3.0TD, 6.1TD…)</p>
                     <p className="text-xs text-slate-500">• Columnas de consumo: <strong>P1, P2, P3</strong>… o "Consumo P1", "Energía P1"…</p>
-                    <p className="text-xs text-slate-500">• Gas: columna <strong>Consumo total</strong> o "Total kWh"</p>
+                    <p className="text-xs text-slate-600 font-medium mt-1">Gas:</p>
+                    <p className="text-xs text-slate-500">• Columna <strong>CodigoCUPS</strong></p>
+                    <p className="text-xs text-slate-500">• Columna <strong>Tarifa</strong> con valores RL1, RL2, RL3 o RL4 (detecta gas automáticamente)</p>
+                    <p className="text-xs text-slate-500">• Columna <strong>Consumoanual</strong> con el consumo en kWh</p>
                   </div>
                 </>
               )}

@@ -1,4 +1,4 @@
-import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Legend } from 'recharts';
 import SectionTitle from '@/components/report/SectionTitle';
 import { sumPeriods, fmtNum, fmtPct, pctColor, PERIOD_COLORS, PERIOD_NAMES, getPeriodsForLabel, buildChartData } from '@/components/report/reportUtils';
 

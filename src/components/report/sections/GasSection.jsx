@@ -1,4 +1,4 @@
-import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Legend } from 'recharts';
 import SectionTitle from '@/components/report/SectionTitle';
 import { fmtNum, fmtPct, GAS_COLORS, pctColor } from '@/components/report/reportUtils';
 

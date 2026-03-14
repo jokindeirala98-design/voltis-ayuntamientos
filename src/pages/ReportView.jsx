@@ -52,6 +52,9 @@ function printToPDF(filename) {
       .no-print { display: none !important; }
       .recharts-active-dot { display: none !important; }
       .recharts-tooltip-cursor { display: none !important; }
+      .recharts-tooltip-wrapper { display: none !important; }
+      .recharts-default-tooltip { display: none !important; }
+      [class*="recharts-active"] { display: none !important; }
       @page { margin: 12mm; size: A4 portrait; }
     }
   `;

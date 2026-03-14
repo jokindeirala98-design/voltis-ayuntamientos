@@ -128,7 +128,7 @@ export default function ProjectDetail() {
             )}
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <ExportExcelButton rows={rows} projectName={project?.name} />
+            <ExportExcelButton rows={visibleRows.length > 0 ? visibleRows : rows} projectName={project?.name} />
             <GenerateReportButton rows={rows} project={project} existingReport={existingReport} />
           </div>
         </div>

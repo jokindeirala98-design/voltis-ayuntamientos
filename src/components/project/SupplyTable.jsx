@@ -439,6 +439,9 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
     });
   }
 
+  // Sync filteredRef after computing
+  filteredRef.current = filtered;
+
   const SortIcon = ({ k }) => {
     if (sortKey !== k) return <ChevronsUpDown className="w-3 h-3 opacity-30" />;
     return sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />;

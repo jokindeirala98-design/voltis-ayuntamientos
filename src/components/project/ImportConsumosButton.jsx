@@ -123,30 +123,57 @@ function processSheet(data, filename) {
     }
 
     // --- Extract consumos ---
-    // If tipo is unknown, try consumo_total first; if found treat as gas-like (total only)
-    const allowedKeys = tipoTarifa
-      ? consumoKeysForType(tipoTarifa)
-      : ['consumo_total', 'consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6'];
     const consumos = {};
 
-    for (const key of allowedKeys) {
-      const col = colMap[key];
-      if (col && row[col] !== null && row[col] !== undefined && row[col] !== '') {
-        const num = parseNum(row[col]);
-        if (num !== null) consumos[key] = num;
+    if (tipoTarifa === 'gas') {
+      // For gas: only consumo_total. Try colMap first, then scan all headers for numeric value
+      let total = null;
+      if (colMap['consumo_total']) {
+        total = parseNum(row[colMap['consumo_total']]);
+      }
+      // Fallback: scan all headers for "anual", "consumo", "kwh" and pick first numeric
+      if (total === null) {
+        for (const h of headers) {
+          if (/anual|consumo|kwh/i.test(h)) {
+            const n = parseNum(row[h]);
+            if (n !== null && n > 0) { total = n; break; }
+          }
+        }
+      }
+      // Last resort: pick the largest positive number in the row (excluding known ID/code cols)
+      if (total === null) {
+        let maxVal = null;
+        for (const h of headers) {
+          if (/cups|codigo|tarifa|descripci|nombre|direccion|municipio|provincia|cif|nif/i.test(h)) continue;
+          const n = parseNum(row[h]);
+          if (n !== null && n > 0 && (maxVal === null || n > maxVal)) maxVal = n;
+        }
+        if (maxVal !== null) total = maxVal;
+      }
+      if (total !== null) consumos.consumo_total = total;
+    } else {
+      // Electricity or unknown: use colMap
+      const allowedKeys = tipoTarifa
+        ? consumoKeysForType(tipoTarifa)
+        : ['consumo_total', 'consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6'];
+      for (const key of allowedKeys) {
+        const col = colMap[key];
+        if (col && row[col] !== null && row[col] !== undefined && row[col] !== '') {
+          const num = parseNum(row[col]);
+          if (num !== null) consumos[key] = num;
+        }
+      }
+      // If unknown tarifa but has consumo_total, treat as gas-like (clear periods)
+      if (!tipoTarifa && consumos.consumo_total) {
+        for (const k of ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6']) {
+          delete consumos[k];
+        }
       }
     }
 
     if (Object.keys(consumos).length === 0) {
       warnings.push(`Fila ${i + 2} (${cups}): no se encontraron consumos — fila omitida`);
       return;
-    }
-
-    // If tarifa unknown but we have a total, treat as gas (consumo_total only), clear periods
-    if (!tipoTarifa && consumos.consumo_total) {
-      for (const k of ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6']) {
-        delete consumos[k];
-      }
     }
 
     // Auto-recalc consumo_total for electricity

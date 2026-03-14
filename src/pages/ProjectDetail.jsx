@@ -21,6 +21,7 @@ export default function ProjectDetail() {
   const queryClient = useQueryClient();
   const [detailRow, setDetailRow] = useState(null);
   const [showUpload, setShowUpload] = useState(true);
+  const [visibleRows, setVisibleRows] = useState([]);
 
   const { data: project } = useQuery({
     queryKey: ['project', id],

@@ -113,7 +113,7 @@ function processSheet(data, filename) {
 
   // ── Detectar si es hoja GAS ──────────────────────────────────────────────
   // Un valor contiene RL1-RL4 si al normalizarlo como string contiene RL seguido de 1-4
-  const containsRL = v => /RL\s*[1-4]/i.test(String(v ?? ''));
+  const containsRL = v => /RL[\s.]*[1-4]/i.test(String(v ?? ''));
   let isGasSheet = false;
   let detectedTarifaCol = tarifaCol;
 

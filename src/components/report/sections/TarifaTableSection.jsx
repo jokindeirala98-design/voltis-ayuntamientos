@@ -1,5 +1,5 @@
 import SectionTitle from '@/components/report/SectionTitle';
-import { fmtNum, fmtPct, pctBadgeClass } from '@/components/report/reportUtils';
+import { fmtNum, fmtPct, pctColor } from '@/components/report/reportUtils';
 
 export default function TarifaTableSection({ rows, sectionNum }) {
   const total = rows.reduce((s, r) => s + (Number(r.consumo_total) || 0), 0);

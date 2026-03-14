@@ -1,6 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import SectionTitle from '@/components/report/SectionTitle';
-import { sumPeriods, fmtNum, fmtPct, pctBadgeClass, PERIOD_COLORS, PERIOD_NAMES } from '@/components/report/reportUtils';
+import { sumPeriods, fmtNum, fmtPct, pctColor, PERIOD_COLORS, PERIOD_NAMES } from '@/components/report/reportUtils';
 
 const RADIAN = Math.PI / 180;
 const ALL_PERIODS = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];

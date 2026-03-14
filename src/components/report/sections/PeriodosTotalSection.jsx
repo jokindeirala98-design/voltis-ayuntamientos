@@ -53,7 +53,7 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
   }).filter(d => d.td20 + d.resto > 0);
 
   return (
-    <div style={{ pageBreakBefore: 'always', breakBefore: 'page' }} className="mb-8">
+    <div style={{ pageBreakBefore: 'always', breakBefore: 'page', paddingTop: '18mm' }} className="mb-8">
       <SectionTitle
         number={sectionNum}
         title="Consumo Total por Periodos — Electricidad"

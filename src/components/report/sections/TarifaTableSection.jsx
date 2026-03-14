@@ -35,7 +35,7 @@ export default function TarifaTableSection({ rows, sectionNum }) {
                   <td className="px-5 py-3" style={{ fontWeight: 700, color: '#1D4ED8' }}>{tarifa}</td>
                   <td className="px-5 py-3 text-right" style={{ color: '#475569' }}>{grpRows.length}</td>
                   <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>{fmtNum(grpTotal)}</td>
-                  <td className="px-5 py-3 text-right" style={{ color: '#475569', fontWeight: 500 }}>{fmtPct(grpTotal, total)}</td>
+                  <td className="px-5 py-3 text-right" style={{ color: pctColor(grpTotal, total), fontWeight: 700 }}>{fmtPct(grpTotal, total)}</td>
                 </tr>
               );
             })}

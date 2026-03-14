@@ -67,7 +67,7 @@ export default function GasSection({ rows, sectionNum }) {
                   </td>
                   <td className="px-5 py-3 text-right" style={{ color: '#0F172A' }}>{grp.length}</td>
                   <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>{fmtNum(grpTotal)}</td>
-                  <td className="px-5 py-3 text-right" style={{ color: '#475569', fontWeight: 500 }}>{fmtPct(grpTotal, totalGas)}</td>
+                  <td className="px-5 py-3 text-right" style={{ color: pctColor(grpTotal, totalGas), fontWeight: 700 }}>{fmtPct(grpTotal, totalGas)}</td>
                 </tr>
               );
             })}

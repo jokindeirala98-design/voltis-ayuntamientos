@@ -83,7 +83,7 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
                     </span>
                   </td>
                   <td className="px-5 py-3 text-right" style={{ fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>{val > 0 ? fmtNum(val) : '—'}</td>
-                  <td className="px-5 py-3 text-right" style={{ color: '#475569', fontWeight: 500 }}>{val > 0 ? fmtPct(val, periodTotal) : '—'}</td>
+                  <td className="px-5 py-3 text-right" style={{ color: val > 0 ? pctColor(val, periodTotal) : '#94A3B8', fontWeight: 700 }}>{val > 0 ? fmtPct(val, periodTotal) : '—'}</td>
                 </tr>
               );
             })}

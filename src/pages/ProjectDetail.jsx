@@ -278,6 +278,7 @@ export default function ProjectDetail() {
               onRowDeleted={refetchRows}
               onRowAdded={refetchRows}
               onRowUpdated={refetchRows}
+              onFilteredRowsChange={setVisibleRows}
             />
           </div>
         </div>

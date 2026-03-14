@@ -57,6 +57,10 @@ function printToPDF(filename) {
       [class*="recharts-active"] { display: none !important; }
       @page { margin: 0; size: A4 portrait; }
       #report-document { padding: 18mm 20mm !important; }
+      #report-document [style*="page-break-before: always"],
+      #report-document [style*="break-before: page"] {
+        padding-top: 18mm !important;
+      }
     }
   `;
   document.head.appendChild(style);

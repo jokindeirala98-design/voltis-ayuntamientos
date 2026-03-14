@@ -166,6 +166,145 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
   const queryClient = useQueryClient();
   const debounceTimers = useRef({});
 
+  // Keep ref in sync so paste handler always has latest activeCell
+  useEffect(() => { activeCellRef.current = activeCell; }, [activeCell]);
+
+  // Show paste feedback briefly
+  const showPasteMsg = (text, type = 'ok') => {
+    setPasteMessage({ text, type });
+    setTimeout(() => setPasteMessage(null), 3000);
+  };
+
+  // Highlight cells briefly after paste
+  const flashCells = (keys) => {
+    const set = new Set(keys);
+    setHighlightedCells(set);
+    setTimeout(() => setHighlightedCells(new Set()), 1500);
+  };
+
+  // Parse number from Excel cell value (handles commas, spaces)
+  const parseNum = (v) => {
+    if (v === '' || v == null) return null;
+    const cleaned = String(v).replace(/\s/g, '').replace(',', '.');
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? null : n;
+  };
+
+  // ── Paste handler ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handlePaste = async (e) => {
+      const ac = activeCellRef.current;
+      if (!ac) return;
+
+      // Only intercept if focus is inside the table
+      if (!tableRef.current?.contains(document.activeElement)) return;
+
+      e.preventDefault();
+      const raw = e.clipboardData?.getData('text/plain') || '';
+      if (!raw) return;
+
+      // Parse clipboard: rows by \n, cols by \t
+      const pasteRows = raw
+        .replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+        .trimEnd()
+        .split('\n')
+        .map(r => r.split('\t'));
+
+      // Get current filtered/sorted rows (same order as rendered)
+      const currentFiltered = filteredRef.current;
+      const startRowIdx = currentFiltered.findIndex(r => r.id === ac.rowId);
+      if (startRowIdx === -1) return;
+
+      const colKeys = COLUMNS.map(c => c.key);
+      const startColIdx = colKeys.indexOf(ac.colKey);
+      if (startColIdx === -1) return;
+
+      const updates = []; // { row, patch }
+      const flashKeys = [];
+      let hasWarning = false;
+
+      pasteRows.forEach((pRow, ri) => {
+        const targetRow = currentFiltered[startRowIdx + ri];
+        if (!targetRow) return;
+
+        const patch = {};
+        pRow.forEach((cellVal, ci) => {
+          const colIdx = startColIdx + ci;
+          if (colIdx >= colKeys.length) return;
+          const colKey = colKeys[colIdx];
+
+          // Skip disabled cells (e.g. 2.0TD restricts some periods)
+          if (isCellDisabled(targetRow, colKey)) { hasWarning = true; return; }
+
+          // Skip non-editable system columns
+          const col = COLUMNS.find(c => c.key === colKey);
+          if (!col) return;
+
+          const trimmed = String(cellVal).trim();
+
+          if (col.type === 'number') {
+            const num = parseNum(trimmed);
+            if (trimmed !== '' && num === null) { hasWarning = true; return; }
+            patch[colKey] = num;
+          } else {
+            patch[colKey] = trimmed;
+          }
+
+          flashKeys.push(`${targetRow.id}_${colKey}`);
+        });
+
+        // Auto-recalculate consumo_total if any consumo_px changed
+        const consumoCols = ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6'];
+        const anyConsumo = consumoCols.some(k => k in patch);
+        if (anyConsumo) {
+          const merged = { ...targetRow, ...patch };
+          const total = consumoCols.reduce((s, k) => s + (parseFloat(merged[k]) || 0), 0);
+          if (total > 0) patch.consumo_total = Math.round(total * 1000) / 1000;
+        }
+
+        if (Object.keys(patch).length > 0) {
+          updates.push({ row: targetRow, patch });
+        }
+      });
+
+      if (updates.length === 0) {
+        showPasteMsg('No se pudo pegar parte del bloque', 'warn');
+        return;
+      }
+
+      // Optimistic update
+      updates.forEach(({ row, patch }) => {
+        queryClient.setQueryData(['supply-rows', projectId], (old) =>
+          old?.map(r => r.id === row.id ? { ...r, ...patch } : r) || []
+        );
+        setSavingRows(prev => new Set([...prev, row.id]));
+      });
+
+      flashCells(flashKeys);
+      showPasteMsg(
+        hasWarning ? 'Algunos valores requieren revisión' : `Pegado completado (${flashKeys.length} celda${flashKeys.length !== 1 ? 's' : ''})`,
+        hasWarning ? 'warn' : 'ok'
+      );
+
+      // Save all to API
+      await Promise.all(updates.map(async ({ row, patch }) => {
+        try {
+          await base44.entities.SupplyRows.update(row.id, patch);
+          setSavingRows(prev => { const s = new Set(prev); s.delete(row.id); return s; });
+          setSavedRows(prev => new Set([...prev, row.id]));
+          setTimeout(() => setSavedRows(prev => { const s = new Set(prev); s.delete(row.id); return s; }), 2000);
+        } catch {
+          setSavingRows(prev => { const s = new Set(prev); s.delete(row.id); return s; });
+        }
+      }));
+
+      if (onRowUpdated) onRowUpdated();
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [queryClient, projectId, onRowUpdated]);
+
   // Navigate to next consumo cell on Enter
   const handleEnterNav = useCallback((rowId, colKey, filteredRows) => {
     const colIdx = CONSUMO_NAV_COLS.indexOf(colKey);

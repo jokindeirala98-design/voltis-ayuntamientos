@@ -14,7 +14,7 @@ const CAPTIONS = [
 
 export default function GraficosInteresSection({ sectionNum }) {
   return (
-    <div style={{ pageBreakBefore: 'always', breakBefore: 'page' }} className="mb-8">
+    <div style={{ pageBreakBefore: 'always', breakBefore: 'page', paddingTop: '18mm' }} className="mb-8">
       <SectionTitle
         number={sectionNum}
         title="Gráficos de Interés"

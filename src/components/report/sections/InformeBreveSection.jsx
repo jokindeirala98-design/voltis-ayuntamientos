@@ -2,7 +2,7 @@ import SectionTitle from '@/components/report/SectionTitle';
 
 export default function InformeBreveSection({ text, onChange, isEditing, sectionNum }) {
   return (
-    <div style={{ pageBreakBefore: 'always', breakBefore: 'page' }} className="mb-8">
+    <div style={{ pageBreakBefore: 'always', breakBefore: 'page', paddingTop: '18mm' }} className="mb-8">
       <SectionTitle
         number={sectionNum}
         title="Informe Breve"

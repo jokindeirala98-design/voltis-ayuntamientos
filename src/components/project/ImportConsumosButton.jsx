@@ -59,6 +59,7 @@ function buildColMap(headers) {
 function classifyTarifa(tarifa) {
   const t = String(tarifa || '').toUpperCase().replace(/\s/g, '');
   if (/RL[1-4]/.test(t)) return 'gas';
+  if (/GAS/i.test(t)) return 'gas';
   if (/^6\.1/.test(t) || /^3\.0/.test(t)) return 'elec_6p';
   if (/^2\.0/.test(t)) return 'elec_3p';
   // Fallback: generic electricity

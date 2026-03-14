@@ -76,7 +76,7 @@ function isCellDisabled(row, colKey) {
 
 const CONSUMO_NAV_COLS = ['consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6'];
 
-function EditableCell({ value, onChange, type = 'text', disabled = false, cellId, onEnterNav }) {
+function EditableCell({ value, onChange, type = 'text', disabled = false, cellId, onEnterNav, onActivate, isHighlighted }) {
   if (disabled) {
     return (
       <div className="w-full h-full px-1.5 py-0.5 text-xs text-slate-200 bg-slate-50 cursor-not-allowed select-none" title="No aplica para esta tarifa">

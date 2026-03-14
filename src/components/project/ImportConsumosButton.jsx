@@ -111,24 +111,26 @@ function processSheet(data, filename) {
   const tarifaCol  = findH('tarifa', 'atr', 'peaje', 'tipotarifa', 'tipodetatifa');
   const anualCol   = findH('consumoanual', 'consumoanual', 'consumoanual', 'kwhanual', 'kwhanuales', 'totalanual');
 
-  // ── Detectar si es hoja GAS: escanear TODOS los valores de todas las filas buscando RL1-RL4 ──
-  const isRL = v => /^RL\s*[1-4]$/i.test(String(v || '').trim());
+  // ── Detectar si es hoja GAS ──────────────────────────────────────────────
+  // Un valor contiene RL1-RL4 si al normalizarlo como string contiene RL seguido de 1-4
+  const containsRL = v => /RL\s*[1-4]/i.test(String(v ?? ''));
   let isGasSheet = false;
   let detectedTarifaCol = tarifaCol;
 
-  // Si hay columna tarifa detectada, buscar en ella
-  if (tarifaCol && data.some(row => isRL(row[tarifaCol]))) {
-    isGasSheet = true;
-  }
-  // Si no, escanear TODAS las columnas buscando RL1-RL4
-  if (!isGasSheet) {
-    for (const h of headers) {
-      if (data.some(row => isRL(row[h]))) {
+  // Escanear TODAS las columnas y TODAS las filas buscando RL1-RL4
+  outer: for (const h of headers) {
+    for (const row of data) {
+      if (containsRL(row[h])) {
         isGasSheet = true;
         detectedTarifaCol = h;
-        break;
+        break outer;
       }
     }
+  }
+
+  // Fallback: si tiene columna "consumoanual" y "codigocups" es casi seguro gas
+  if (!isGasSheet && anualCol && nh.some(x => x.norm.includes('codigocups') || x.norm === 'codigocups')) {
+    isGasSheet = true;
   }
 
   // ── Columna de consumo para gas: prioridad "Consumoanual", luego patrones ──

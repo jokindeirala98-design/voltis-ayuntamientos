@@ -24,7 +24,7 @@ function parseNum(v) {
 // ── Detección de columnas ────────────────────────────────────────────────────
 
 const CUPS_PATTERNS = [/^cups$/i, /^codigocups$/i, /codigo\s*cups/i, /código\s*cups/i, /punto\s*de\s*suministro/i, /^cups\s/i, /cups/i];
-const TARIFA_PATTERNS = [/^tarifa$/i, /^atr$/i, /^peaje$/i, /tipo\s*de\s*tarifa/i, /^tarifa\s/i];
+const TARIFA_PATTERNS = [/^tarifa$/i, /^atr$/i, /^peaje$/i, /tipo\s*de\s*tarifa/i, /tarifa/i];
 
 const PERIODO_PATTERNS = {
   consumo_p1: [/^p1$/i, /consumo\s*p1/i, /energ[íi]a\s*p1/i, /kwh\s*p1/i, /periodo\s*1/i, /p\.?1\b/i],

@@ -84,6 +84,8 @@ function EditableCell({ value, onChange, type = 'text', disabled = false, cellId
       </div>
     );
   }
+
+  const highlightClass = isHighlighted ? 'ring-2 ring-inset ring-emerald-400 bg-emerald-50/60' : '';
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const inputRef = useRef(null);

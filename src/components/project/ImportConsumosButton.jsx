@@ -33,7 +33,7 @@ const PERIODO_PATTERNS = {
   consumo_p4: [/^p4$/i, /consumo\s*p4/i, /energ[íi]a\s*p4/i, /kwh\s*p4/i, /periodo\s*4/i, /p\.?4\b/i],
   consumo_p5: [/^p5$/i, /consumo\s*p5/i, /energ[íi]a\s*p5/i, /kwh\s*p5/i, /periodo\s*5/i, /p\.?5\b/i],
   consumo_p6: [/^p6$/i, /consumo\s*p6/i, /energ[íi]a\s*p6/i, /kwh\s*p6/i, /periodo\s*6/i, /p\.?6\b/i],
-  consumo_total: [/consumo\s*total/i, /total\s*consumo/i, /total\s*kwh/i, /kwh\s*gas/i, /consumo\s*anual/i, /anual/i, /^total$/i, /^kwh$/i, /energia\s*total/i, /energ[íi]a\s*total/i],
+  consumo_total: [/^consumoanual$/i, /consumo\s*anual/i, /consumo\s*total/i, /total\s*consumo/i, /total\s*kwh/i, /kwh\s*gas/i, /anual/i, /^total$/i, /^kwh$/i, /energia\s*total/i, /energ[íi]a\s*total/i],
 };
 
 function findCol(headers, patterns) {

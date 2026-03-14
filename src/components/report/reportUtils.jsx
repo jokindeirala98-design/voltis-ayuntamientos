@@ -83,19 +83,19 @@ export function buildChartData(sums, periods, filterZero = true) {
 
 // ── Color palettes ──────────────────────────────────────────────────────────
 export const PERIOD_COLORS = [
-  '#3B82F6', // P1 — blue-500
-  '#06B6D4', // P2 — cyan-500
-  '#10B981', // P3 — emerald-500
-  '#8B5CF6', // P4 — violet-500
-  '#F59E0B', // P5 — amber-500
-  '#EF4444', // P6 — red-500
+  '#1D4ED8', // P1 — blue-700
+  '#3B82F6', // P2 — blue-500
+  '#60A5FA', // P3 — blue-300
+  '#34D399', // P4 — emerald-400
+  '#FBBF24', // P5 — amber-400
+  '#F97316', // P6 — orange-500
 ];
 
 export const GAS_COLORS = [
-  '#F97316', // RL1 — orange-500
-  '#EF4444', // RL2 — red-500
-  '#EAB308', // RL3 — yellow-500
-  '#84CC16', // RL4 — lime-500
+  '#10B981', // RL1 — emerald-500
+  '#059669', // RL2 — emerald-600
+  '#34D399', // RL3 — emerald-400
+  '#6EE7B7', // RL4 — emerald-300
 ];
 
 export const TARIFA_COLORS = [

@@ -7,11 +7,12 @@ import { Upload, CheckCircle2, AlertTriangle, X, FileText, Loader2, AlertCircle,
 // ── Normalización ───────────────────────────────────────────────────────────
 
 function normalizeCups(v) {
-  return String(v || '').toUpperCase().replace(/[\s\-_.]/g, '').trim();
+  // Remove ALL non-alphanumeric characters (spaces, hyphens, dots, accents, unicode, etc.)
+  return String(v || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9]/g, '');
 }
 
 function isValidCups(cups) {
-  return /^ES/.test(cups) && cups.length >= 18 && cups.length <= 22;
+  return /^ES/.test(cups) && cups.length >= 18 && cups.length <= 24;
 }
 
 function parseNum(v) {
@@ -297,8 +298,15 @@ export default function ImportConsumosButton({ rows, onUpdated }) {
     const notFound = [];
     const globalWarnings = parsed.flatMap(f => f.warnings);
 
+    // Build also a prefix index (first 18 chars) as fallback
+    const supplyByPrefix = {};
+    Object.entries(supplyByCups).forEach(([c, r]) => {
+      const prefix = c.slice(0, 18);
+      if (!supplyByPrefix[prefix]) supplyByPrefix[prefix] = r;
+    });
+
     for (const [cups, entries] of Object.entries(byExcelCups)) {
-      const supply = supplyByCups[cups];
+      const supply = supplyByCups[cups] || supplyByPrefix[cups.slice(0, 18)];
       if (!supply) { notFound.push(cups); continue; }
 
       if (entries.length > 1) {

@@ -414,6 +414,9 @@ export default function SupplyTable({ rows, projectId, onRowDeleted, onRowAdded,
     else { setSortKey(key); setSortDir('asc'); }
   };
 
+  // Keep a ref to filtered for use in paste handler
+  const filteredRef = useRef([]);
+
   // Filter & sort
   let filtered = rows;
   if (filter) {

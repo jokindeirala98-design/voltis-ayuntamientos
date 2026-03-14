@@ -262,9 +262,15 @@ export default function ImportConsumosButton({ rows, onUpdated }) {
     setApplying(true);
 
     const results = await Promise.allSettled(
-      preview.matches.map(({ supply, consumos }) =>
-        base44.entities.SupplyRows.update(supply.id, consumos)
-      )
+      preview.matches.map(({ supply, consumos, tarifa, tipoTarifa }) => {
+        const patch = { ...consumos };
+        // For gas: also set tarifa and tipo_suministro
+        if (tipoTarifa === 'gas') {
+          if (tarifa) patch.tarifa = String(tarifa).trim();
+          if (!supply.tipo_suministro || supply.tipo_suministro === '') patch.tipo_suministro = 'Gas';
+        }
+        return base44.entities.SupplyRows.update(supply.id, patch);
+      })
     );
 
     const failed = results.filter(r => r.status === 'rejected').length;

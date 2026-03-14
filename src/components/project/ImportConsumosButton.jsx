@@ -142,6 +142,13 @@ function processSheet(data, filename) {
       return;
     }
 
+    // If tarifa unknown but we have a total, treat as gas (consumo_total only), clear periods
+    if (!tipoTarifa && consumos.consumo_total) {
+      for (const k of ['consumo_p1','consumo_p2','consumo_p3','consumo_p4','consumo_p5','consumo_p6']) {
+        delete consumos[k];
+      }
+    }
+
     // Auto-recalc consumo_total for electricity
     if (tipoTarifa === 'elec_3p') {
       const t = (consumos.consumo_p1 || 0) + (consumos.consumo_p2 || 0) + (consumos.consumo_p3 || 0);

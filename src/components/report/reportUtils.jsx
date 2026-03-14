@@ -13,7 +13,7 @@ export function validateRows(rows) {
       const p = (Number(row.consumo_p1) || 0) + (Number(row.consumo_p2) || 0) + (Number(row.consumo_p3) || 0);
       if (p === 0) missing.push('Consumos por periodo (P1/P2/P3)');
     }
-    if (row.tipo_suministro === 'Gas' && !/RL[\s.]*[1-4]/i.test(row.tarifa || '')) {
+    if (row.tipo_suministro === 'Gas' && !/RL[\s.]*[1-4]/i.test((row.tarifa || '').replace(/\s/g, ''))) {
       missing.push('Tarifa RL de gas (RL1/RL2/RL3/RL4)');
     }
     if (missing.length > 0) issues.push({ label, missing });

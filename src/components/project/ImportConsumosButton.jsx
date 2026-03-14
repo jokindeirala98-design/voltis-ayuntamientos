@@ -116,8 +116,17 @@ function processSheet(data, filename) {
       }
     }
 
+    // If still no tarifa detected, try to infer from supply table row (if CUPS exists there)
+    if (!tipoTarifa) {
+      // Will fallback to extracting all available: consumo_total first, then periods
+      tipoTarifa = null;
+    }
+
     // --- Extract consumos ---
-    const allowedKeys = consumoKeysForType(tipoTarifa);
+    // If tipo is unknown, try consumo_total first; if found treat as gas-like (total only)
+    const allowedKeys = tipoTarifa
+      ? consumoKeysForType(tipoTarifa)
+      : ['consumo_total', 'consumo_p1', 'consumo_p2', 'consumo_p3', 'consumo_p4', 'consumo_p5', 'consumo_p6'];
     const consumos = {};
 
     for (const key of allowedKeys) {

@@ -142,7 +142,7 @@ function EditableCell({ value, onChange, type = 'text', disabled = false, cellId
       onClick={start}
       onFocus={start}
       data-cell-id={cellId}
-      className="w-full h-full px-1.5 py-0.5 cursor-pointer text-xs truncate outline-none"
+      className={`w-full h-full px-1.5 py-0.5 cursor-pointer text-xs truncate outline-none transition-all ${highlightClass}`}
       title={String(value ?? '')}
     >
       {value !== null && value !== undefined && value !== '' ? String(value) : (

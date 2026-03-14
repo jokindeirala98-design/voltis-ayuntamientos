@@ -56,7 +56,7 @@ function printToPDF(filename) {
       .recharts-default-tooltip { display: none !important; }
       [class*="recharts-active"] { display: none !important; }
       @page { margin: 0; size: A4 portrait; }
-      #report-document { padding: 12mm !important; }
+      #report-document { padding: 18mm 20mm !important; }
     }
   `;
   document.head.appendChild(style);

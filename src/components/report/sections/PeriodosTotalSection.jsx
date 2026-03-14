@@ -121,7 +121,6 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
                 return <Cell key={i} fill={PERIOD_COLORS[idx >= 0 ? idx : i]} />;
               })}
             </Pie>
-            <Tooltip formatter={(v, name) => [`${fmtNum(v)} kWh`, `${name} — ${PERIOD_NAMES[name] || ''}`]} contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E2E8F0' }} />
             <Legend iconSize={10} iconType="circle" formatter={(name) => `${name} — ${PERIOD_NAMES[name] || ''}`} />
           </PieChart>
         </ResponsiveContainer>
@@ -137,7 +136,6 @@ export default function PeriodosTotalSection({ classified, sectionNum }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
             <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} tickFormatter={v => v >= 1000 ? `${Math.round(v / 1000)}k` : v} width={55} axisLine={false} tickLine={false} />
-            <Tooltip formatter={(v, series, props) => [`${fmtNum(v)} kWh`, series === 'td20' ? `${props.payload.name} (2.0TD)` : props.payload.name]} contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E2E8F0' }} />
             <Legend formatter={(val) => val === 'td20' ? '2.0TD' : 'Resto de tarifas'} />
             {has20 ? (
               <>

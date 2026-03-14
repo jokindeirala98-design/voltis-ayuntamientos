@@ -103,7 +103,6 @@ export default function GasSection({ rows, sectionNum }) {
             >
               {pieData.map((_, i) => <Cell key={i} fill={GAS_COLORS[i % GAS_COLORS.length]} />)}
             </Pie>
-            <Tooltip formatter={(v, name) => [`${fmtNum(v)} kWh`, name]} contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E2E8F0' }} />
             <Legend iconSize={10} iconType="circle" />
           </PieChart>
         </ResponsiveContainer>

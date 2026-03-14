@@ -95,7 +95,6 @@ export default function TarifaDetailSection({ tarifaLabel, rows, sectionNum }) {
                 return <Cell key={i} fill={PERIOD_COLORS[idx >= 0 ? idx : i]} />;
               })}
             </Pie>
-            <Tooltip formatter={(v, name) => [`${fmtNum(v)} kWh`, `${name} — ${PERIOD_NAMES[name] || ''}`]} contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #E2E8F0' }} />
             <Legend iconSize={10} iconType="circle" formatter={(name) => `${name} — ${PERIOD_NAMES[name] || ''}`} />
           </PieChart>
         </ResponsiveContainer>

@@ -65,14 +65,25 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-    const { file_url, filename, project_id, file_id } = await req.json();
+    const { file_url, filename, project_id, file_id, template_id } = await req.json();
     if (!file_url || !project_id || !file_id) {
       return Response.json({ error: 'Parámetros requeridos: file_url, project_id, file_id' }, { status: 400 });
     }
 
     await base44.asServiceRole.entities.UploadedFiles.update(file_id, { processing_status: 'procesando' });
 
-    const extractionPrompt = `Eres un experto en extracción de datos de facturas energéticas españolas. Analiza la factura y extrae los datos con la máxima fiabilidad. Prefiere null a datos incorrectos.
+    // Load custom prompt from template if available
+    let templateCustomPrompt = null;
+    if (template_id) {
+      try {
+        const templates = await base44.asServiceRole.entities.ExtractionTemplates.filter({ id: template_id });
+        if (templates?.[0]?.custom_prompt) {
+          templateCustomPrompt = templates[0].custom_prompt;
+        }
+      } catch { /* ignore */ }
+    }
+
+    const baseExtractionPrompt = `Eres un experto en extracción de datos de facturas energéticas españolas. Analiza la factura y extrae los datos con la máxima fiabilidad. Prefiere null a datos incorrectos.
 
 ==================================================
 EXTRACCIÓN DE CUPS

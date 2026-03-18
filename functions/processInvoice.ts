@@ -191,15 +191,29 @@ Devuelve JSON con esta estructura:
       }
     }
 
-    // ── Post-processing: tariff fallback from powers ──────────────────────────
+    // ── Post-processing: normalizar formato de tarifa ────────────────────────
+    if (extractedData.tarifa) {
+      extractedData.tarifa = normalizeTariffFormat(extractedData.tarifa);
+    }
+
+    // ── Post-processing: tariff fallback/override from powers ────────────────
     let tarifaDetectadaPor = extractedData.tarifa_detectada_por || null;
-    if (!extractedData.tarifa) {
+    const allPotKeys = ['potencia_p1', 'potencia_p2', 'potencia_p3', 'potencia_p4', 'potencia_p5', 'potencia_p6'];
+    const presentPotCount = allPotKeys.filter(k => extractedData[k] != null && extractedData[k] > 0).length;
+
+    // Si el LLM devolvió tarifa pero tenemos 2 potencias y la tarifa no es 2.0TD → override
+    if (extractedData.tarifa && extractedData.tarifa !== '2.0TD' && presentPotCount > 0 && presentPotCount <= 2) {
+      extractedData.tarifa_notes = (extractedData.tarifa_notes || '') + ` Tarifa corregida a 2.0TD: solo se detectaron ${presentPotCount} potencia(s) contratada(s).`;
+      extractedData.tarifa = '2.0TD';
+      extractedData.tarifa_confidence = 'media';
+      tarifaDetectadaPor = 'potencias';
+    } else if (!extractedData.tarifa) {
       const inferred = inferTariffFromPowers(extractedData);
       if (inferred) {
         extractedData.tarifa = inferred;
         extractedData.tarifa_confidence = 'media';
         tarifaDetectadaPor = 'potencias';
-        extractedData.tarifa_notes = (extractedData.tarifa_notes || '') + ` Tarifa deducida por potencia contratada (máx ${Math.max(...['potencia_p1','potencia_p2','potencia_p3','potencia_p4','potencia_p5','potencia_p6'].map(k => extractedData[k] || 0))} kW).`;
+        extractedData.tarifa_notes = (extractedData.tarifa_notes || '') + ` Tarifa deducida por número de potencias detectadas (${presentPotCount}).`;
       }
     } else {
       tarifaDetectadaPor = tarifaDetectadaPor || 'factura';

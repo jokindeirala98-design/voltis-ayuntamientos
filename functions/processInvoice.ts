@@ -141,7 +141,7 @@ RESTO DE CAMPOS
 - Dirección: SOLO la dirección del punto de SUMINISTRO (no la de facturación).
 - tipo_suministro: "Electricidad" o "Gas".
 
-Devuelve JSON con esta estructura:
+Devuelve JSON con esta estructura exacta:
 {
   "comercializadora": string|null, "comercializadora_confidence": "alta"|"media"|"baja", "comercializadora_notes": string|null,
   "cups": string|null, "cups_confidence": "alta"|"media"|"baja", "cups_notes": string|null, "cups_detectado_por": "etiqueta_cups"|"contexto_suministro"|"patron_ocr"|null,

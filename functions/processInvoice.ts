@@ -104,12 +104,14 @@ PRIORIDAD 1 — Lee si la tarifa aparece explícitamente en la factura.
 Valores válidos: 2.0TD, 3.0TD, 6.1TD, RL1, RL2, RL3, RL4, y variantes como "2.0", "3.0", "6.1".
 Si encuentras la tarifa explícita, normalízala y úsala. tarifa_detectada_por = "factura".
 
-PRIORIDAD 2 — Si la tarifa NO aparece explícitamente, infiere por potencia contratada:
-- Potencia máxima < 15 kW → 2.0TD. tarifa_detectada_por = "potencias"
-- Potencia máxima >= 15 kW → 3.0TD. tarifa_detectada_por = "potencias"
-- NO clasifiques como 6.1TD automáticamente si las potencias son bajas (< 50 kW). 6.1TD es para media tensión industrial.
+PRIORIDAD 2 — Si la tarifa NO aparece explícitamente, infiere por NÚMERO de potencias contratadas detectadas:
+- Si detectas EXACTAMENTE 2 potencias (P1 y P2) → 2.0TD. tarifa_detectada_por = "potencias"
+- Si detectas 3 o más potencias (P1 a P6) → 3.0TD. tarifa_detectada_por = "potencias"
+- NUNCA clasifiques como 6.1TD automáticamente. 6.1TD solo si aparece EXPLÍCITO en la factura.
 
 PRIORIDAD 3 — Si no tienes potencias ni tarifa explícita, devuelve null. tarifa_detectada_por = "inferencia".
+
+NORMALIZACIÓN OBLIGATORIA: Siempre devuelve la tarifa en uno de estos formatos exactos: "2.0TD", "3.0TD", "6.1TD", "RL1", "RL2", "RL3", "RL4". Nunca devuelvas "2.0", "3.0" sin el sufijo "TD".
 
 DETECCIÓN DE DISCREPANCIA: Si la tarifa de la factura y la que sugieren las potencias son diferentes, indica tarifa_discrepancia = true y detalla en tarifa_notes.
 

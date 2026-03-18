@@ -155,6 +155,11 @@ Devuelve JSON con esta estructura exacta:
   "validation_summary": string
 }`;
 
+    // Use custom template prompt if available, prepend it to the base prompt
+    const extractionPrompt = templateCustomPrompt
+      ? `INSTRUCCIONES ESPECÍFICAS PARA ESTE TIPO DE FACTURA (tienen prioridad sobre las instrucciones generales):\n\n${templateCustomPrompt}\n\n---\n\nINSTRUCCIONES GENERALES DE EXTRACCIÓN:\n\n${baseExtractionPrompt}`
+      : baseExtractionPrompt;
+
     let extractedData = null;
     let extractionError = null;
 

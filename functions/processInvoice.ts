@@ -220,6 +220,15 @@ Devuelve JSON con esta estructura:
     }
     extractedData.tarifa_detectada_por = tarifaDetectadaPor;
 
+    // ── Validación: 3.0TD con potencias > 35kW → posible 6.1TD ──────────────
+    if (extractedData.tarifa === '3.0TD') {
+      const maxPot = Math.max(...allPotKeys.map(k => extractedData[k] || 0));
+      if (maxPot > 35) {
+        extractedData.tarifa_notes = (extractedData.tarifa_notes || '') + ` REVISAR: potencia máxima de ${maxPot} kW supera 35 kW, podría ser tarifa 6.1TD.`;
+        extractedData.tarifa_confidence = 'baja';
+      }
+    }
+
     // ── Apply tariff period rules ─────────────────────────────────────────────
     const tariffWarnings = applyTariffRules(extractedData.tarifa, extractedData);
 

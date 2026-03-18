@@ -65,25 +65,14 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-    const { file_url, filename, project_id, file_id, template_id } = await req.json();
+    const { file_url, filename, project_id, file_id } = await req.json();
     if (!file_url || !project_id || !file_id) {
       return Response.json({ error: 'Parámetros requeridos: file_url, project_id, file_id' }, { status: 400 });
     }
 
     await base44.asServiceRole.entities.UploadedFiles.update(file_id, { processing_status: 'procesando' });
 
-    // Load custom prompt from template if available
-    let templateCustomPrompt = null;
-    if (template_id) {
-      try {
-        const templates = await base44.asServiceRole.entities.ExtractionTemplates.filter({ id: template_id });
-        if (templates?.[0]?.custom_prompt) {
-          templateCustomPrompt = templates[0].custom_prompt;
-        }
-      } catch { /* ignore */ }
-    }
-
-    const baseExtractionPrompt = `Eres un experto en extracción de datos de facturas energéticas españolas. Analiza la factura y extrae los datos con la máxima fiabilidad. Prefiere null a datos incorrectos.
+    const extractionPrompt = `Eres un experto en extracción de datos de facturas energéticas españolas. Analiza la factura y extrae los datos con la máxima fiabilidad. Prefiere null a datos incorrectos.
 
 ==================================================
 EXTRACCIÓN DE CUPS
@@ -141,7 +130,7 @@ RESTO DE CAMPOS
 - Dirección: SOLO la dirección del punto de SUMINISTRO (no la de facturación).
 - tipo_suministro: "Electricidad" o "Gas".
 
-Devuelve JSON con esta estructura exacta:
+Devuelve JSON con esta estructura:
 {
   "comercializadora": string|null, "comercializadora_confidence": "alta"|"media"|"baja", "comercializadora_notes": string|null,
   "cups": string|null, "cups_confidence": "alta"|"media"|"baja", "cups_notes": string|null, "cups_detectado_por": "etiqueta_cups"|"contexto_suministro"|"patron_ocr"|null,
@@ -154,11 +143,6 @@ Devuelve JSON con esta estructura exacta:
   "consumo_total": null, "consumos_confidence": "alta"|"media"|"baja", "consumos_notes": "Consumos no extraídos de factura",
   "validation_summary": string
 }`;
-
-    // Use custom template prompt if available, prepend it to the base prompt
-    const extractionPrompt = templateCustomPrompt
-      ? `INSTRUCCIONES ESPECÍFICAS PARA ESTE TIPO DE FACTURA (tienen prioridad sobre las instrucciones generales):\n\n${templateCustomPrompt}\n\n---\n\nINSTRUCCIONES GENERALES DE EXTRACCIÓN:\n\n${baseExtractionPrompt}`
-      : baseExtractionPrompt;
 
     let extractedData = null;
     let extractionError = null;

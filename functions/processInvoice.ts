@@ -1,5 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+// ── Normalize tariff format ───────────────────────────────────────────────────
+function normalizeTariffFormat(tarifa) {
+  if (!tarifa) return tarifa;
+  const t = String(tarifa).toUpperCase().replace(/\s/g, '');
+  if (/2\.0/.test(t)) return '2.0TD';
+  if (/3\.0/.test(t)) return '3.0TD';
+  if (/6\.1/.test(t)) return '6.1TD';
+  const rl = t.match(/RL([1-4])/);
+  if (rl) return `RL${rl[1]}`;
+  return tarifa; // devuelve original si no encaja
+}
+
 // ── Tariff structure rules ────────────────────────────────────────────────────
 function applyTariffRules(tarifa, data) {
   const normalized = (tarifa || '').toUpperCase().trim();
@@ -19,17 +31,19 @@ function applyTariffRules(tarifa, data) {
 }
 
 // ── Infer tariff from contracted powers ──────────────────────────────────────
+// Si solo hay 2 potencias → 2.0TD SIEMPRE (independientemente del valor)
+// Si hay 6 potencias → 3.0TD por defecto (6.1TD requiere indicación explícita)
 function inferTariffFromPowers(data) {
-  const powers = ['potencia_p1', 'potencia_p2', 'potencia_p3', 'potencia_p4', 'potencia_p5', 'potencia_p6']
-    .map(k => data[k])
-    .filter(v => v != null && v > 0);
+  const allKeys = ['potencia_p1', 'potencia_p2', 'potencia_p3', 'potencia_p4', 'potencia_p5', 'potencia_p6'];
+  const presentPowers = allKeys.filter(k => data[k] != null && data[k] > 0);
 
-  if (powers.length === 0) return null;
+  if (presentPowers.length === 0) return null;
 
-  const maxPower = Math.max(...powers);
-  if (maxPower < 15) return '2.0TD';
-  if (maxPower < 50) return '3.0TD';
-  return '3.0TD'; // Avoid auto-classifying as 6.1TD unless explicitly stated in invoice
+  // Regla principal: número de potencias detectadas
+  if (presentPowers.length <= 2) return '2.0TD';
+
+  // 3 o más potencias → 3.0TD por defecto
+  return '3.0TD';
 }
 
 // ── Normalize CUPS ────────────────────────────────────────────────────────────

@@ -8,10 +8,12 @@ export function validateRows(rows) {
     if (!row.cups?.trim()) missing.push('CUPS');
     if (!row.tarifa?.trim()) missing.push('Tarifa');
     if (!row.tipo_suministro?.trim()) missing.push('Tipo de suministro');
-    if (!row.consumo_total || Number(row.consumo_total) === 0) missing.push('Consumo anual');
+    if (row.consumo_total === null || row.consumo_total === undefined || row.consumo_total === '') missing.push('Consumo anual');
     if (row.tipo_suministro === 'Electricidad') {
-      const p = (Number(row.consumo_p1) || 0) + (Number(row.consumo_p2) || 0) + (Number(row.consumo_p3) || 0);
-      if (p === 0) missing.push('Consumos por periodo (P1/P2/P3)');
+      const hasP1 = row.consumo_p1 !== null && row.consumo_p1 !== undefined && row.consumo_p1 !== '';
+      const hasP2 = row.consumo_p2 !== null && row.consumo_p2 !== undefined && row.consumo_p2 !== '';
+      const hasP3 = row.consumo_p3 !== null && row.consumo_p3 !== undefined && row.consumo_p3 !== '';
+      if (!hasP1 && !hasP2 && !hasP3) missing.push('Consumos por periodo (P1/P2/P3)');
     }
     if (row.tipo_suministro === 'Gas' && !/RL[\s.]*[1-4]/i.test((row.tarifa || '').replace(/\s/g, ''))) {
       missing.push('Tarifa RL de gas (RL1/RL2/RL3/RL4)');
